@@ -15,7 +15,13 @@ import {
   History,
   PenSquare,
   ArrowRightLeft,
-  Replace
+  Replace,
+  Users2,
+  Briefcase,
+  UserPlus,
+  CalendarCheck,
+  BarChart2,
+  ClipboardCheck,
 } from "lucide-react";
 
 export type SidebarLink = {
@@ -32,10 +38,25 @@ export type Module = {
   sidebarLinks: SidebarLink[];
 };
 
-export const moduleKeys = ["ventes", "stock", "personnel", "parametres"] as const;
+export const moduleKeys = ["ventes", "tiers", "stock", "personnel", "parametres"] as const;
 export type ModuleKey = typeof moduleKeys[number];
 
 export const modules: Record<ModuleKey, Module> = {
+  tiers: {
+    name: "Tiers",
+    icon: Users2,
+    composeActionLabel: "Nouveau Tiers",
+    sidebarLinks: [
+      { title: "Tableau de Bord", icon: LayoutDashboard, href: "/tiers" },
+      { title: "Clients", icon: Users, href: "/tiers/clients" },
+      { title: "Fournisseurs", icon: Truck, href: "/tiers/fournisseurs" },
+      { title: "Commerciaux", icon: Briefcase, href: "/tiers/commerciaux" },
+      { title: "Prospects", icon: UserPlus, href: "/tiers/prospects" },
+      { title: "Actions", icon: CalendarCheck, href: "/tiers/actions" },
+      { title: "Complétude Comptable", icon: ClipboardCheck, href: "/tiers/completude" },
+      { title: "Statistiques", icon: BarChart2, href: "/tiers/stats" },
+    ],
+  },
   ventes: {
     name: "Ventes",
     icon: ShoppingCart,
@@ -69,7 +90,7 @@ export const modules: Record<ModuleKey, Module> = {
     composeActionLabel: "Nouvel Utilisateur",
     sidebarLinks: [
       { title: "Utilisateurs", icon: Users, href: "/settings/users" },
-      { title: "Profils & Droits", icon: ShieldCheck, href: "/settings/roles" }, 
+      { title: "Profils & Droits", icon: ShieldCheck, href: "/settings/roles" },
       { title: "Piste d'audit", icon: History, href: "/settings/audits" },
     ],
   },
