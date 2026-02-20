@@ -275,6 +275,26 @@ export interface TiersFournisseur extends TierBase {
     categoriesAchat?: CategorieTransaction[];
 }
 
+export interface CommissionFacture {
+    id: string;
+    factureId: string;
+    factureNumero: string;
+    clientId: string;
+    clientNom: string;
+    dateFact: Date;
+    montantFacture: number;
+    tauxCommission: number;        // % négocié avec ce commercial
+    montantCommission: number;     // calculé: montantFacture × tauxCommission / 100
+    statut: 'en_attente' | 'payé' | 'annulé';
+    datePaiement?: Date;
+    actionSuivi?: {
+        type: string;
+        date: Date;
+        note: string;
+        statut: 'PENDING' | 'DONE';
+    };
+}
+
 export interface TiersCommercial extends TierBase {
     type: 'commercial';
     typeCommercial?: TypeCommercial;
@@ -290,6 +310,7 @@ export interface TiersCommercial extends TierBase {
     clients?: string[];
     affaires?: Affaire[];
     paiements?: PaiementCommission[];
+    commissionFactures?: CommissionFacture[]; // Factures clients avec suivi commission
 }
 
 export interface TiersProspect extends TierBase {
@@ -303,6 +324,12 @@ export interface TiersProspect extends TierBase {
     contact?: string;
     familleProspect?: string;
     notes?: string;
+    downgradeInfo?: {             // Rétrogradation depuis client
+        motif: string;
+        date: Date;
+        ancienClientId: string;
+        ancienClientNom: string;
+    };
 }
 
 export type Tier = TiersClient | TiersFournisseur | TiersCommercial | TiersProspect;
