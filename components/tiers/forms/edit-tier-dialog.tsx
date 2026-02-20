@@ -2,10 +2,10 @@
 
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
-import { Plus } from "lucide-react"
+import { Edit2 } from "lucide-react"
 import { TiersDraggableDialog } from "@/components/tiers/ui/draggable-dialog"
 import {
-    TierType, Tier, ModePaiementClient, CategorieTransaction,
+    Tier, TierType, ModePaiementClient, CategorieTransaction,
     LABEL_MODE_PAIEMENT, LABEL_CATEGORIE_TRANSACTION
 } from "@/types/tiers"
 import { useTiersStore } from "@/lib/tiers/store"
@@ -20,25 +20,24 @@ import { Textarea } from "@/components/ui/textarea"
 import { Switch } from "@/components/ui/switch"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
-interface CreateTierDialogProps {
-    type: TierType
-    label?: string
+interface EditTierDialogProps {
+    tier: Tier
+    compact?: boolean
 }
 
 const MODES_PAIEMENT: ModePaiementClient[] = ['CHEQUE', 'PAR_COMPTE', 'CREDIT', 'ESPECES', 'VIREMENT']
 const CATEGORIES_TRANSACTION: CategorieTransaction[] = ['DETAIL', 'DEMI_GROS', 'GROS', 'SUPER_GROS']
 
-const baseSchema = z.object({
-    // Identité
-    name: z.string().min(2, "Le nom est requis (min 2 caractères)"),
+const editSchema = z.object({
+    name: z.string().min(2, "Le nom est requis"),
     shortName: z.string().optional(),
     code: z.string().optional(),
-    typeEntreprise: z.enum(['PARTICULIER', 'ENTREPRISE', 'REVENDEUR']).optional(),
+    typeEntreprise: z.enum(['PARTICULIER', 'ENTREPRISE', 'REVENDEUR']).optional().or(z.literal("")),
     formeJuridique: z.string().optional(),
-    secteurActivite: z.enum(['IT', 'FINANCE', 'SANTE', 'INDUSTRIE', 'COMMERCE']).optional(),
-    tailleEntreprise: z.enum(['MICRO', 'PME', 'ETI', 'GE']).optional(),
+    secteurActivite: z.enum(['IT', 'FINANCE', 'SANTE', 'INDUSTRIE', 'COMMERCE']).optional().or(z.literal("")),
+    tailleEntreprise: z.enum(['MICRO', 'PME', 'ETI', 'GE']).optional().or(z.literal("")),
     dateCreation: z.string().optional(),
-    // Contact
+    description: z.string().optional(),
     email: z.string().email("Email invalide").optional().or(z.literal("")),
     phoneNumber: z.string().optional(),
     fax: z.string().optional(),
@@ -47,43 +46,40 @@ const baseSchema = z.object({
     complement: z.string().optional(),
     postalCode: z.string().optional(),
     city: z.string().optional(),
-    pays: z.enum(['CMR', 'CG', 'TC', 'GB', 'CI']).optional(),
-    canalPrefere: z.enum(['EMAIL', 'PHONE', 'COURRIER', 'IN_PERSON']).optional(),
-    // Documents
+    pays: z.enum(['CMR', 'CG', 'TC', 'GB', 'CI']).optional().or(z.literal("")),
+    canalPrefere: z.enum(['EMAIL', 'PHONE', 'COURRIER', 'IN_PERSON']).optional().or(z.literal("")),
     registreCommerce: z.string().optional(),
     numeroFiscal: z.string().optional(),
     nui: z.string().optional(),
     siret: z.string().optional(),
-    description: z.string().optional(),
-    // Client-specific
-    segment: z.enum(['PARTICULIER', 'ENTREPRISE', 'REVENDEUR']).optional(),
+    // Client
+    segment: z.enum(['PARTICULIER', 'ENTREPRISE', 'REVENDEUR']).optional().or(z.literal("")),
     familleClient: z.string().optional(),
     plafondCredit: z.number().optional(),
-    canalAquisition: z.enum(['WEB', 'RESEAU', 'RECOMMANDATION']).optional(),
+    canalAquisition: z.enum(['WEB', 'RESEAU', 'RECOMMANDATION']).optional().or(z.literal("")),
     estAssujettiTVA: z.boolean().optional(),
-    // Fournisseur-specific
+    modesPaiementClient: z.array(z.string()).optional(),
+    categoriesVente: z.array(z.string()).optional(),
+    // Fournisseur
     familleFournisseur: z.string().optional(),
     delaiLivraison: z.string().optional(),
     conditionsPaiement: z.string().optional(),
     certification: z.string().optional(),
-    // Commercial-specific
-    typeCommercial: z.enum(['INTERNE', 'EXTERNE', 'INDEPENDANT']).optional(),
-    commission: z.number().optional(),
-    matricule: z.string().optional(),
-    // Prospect-specific
-    sourceProspect: z.enum(['SITE_WEB', 'RESEAU_SOCIAL', 'SALON', 'RECOMMANDATION']).optional(),
-    potentiel: z.enum(['FAIBLE', 'MOYEN', 'ELEVE', 'STRATEGIQUE']).optional(),
-    probabilite: z.number().min(0).max(100).optional(),
-    // Multi-select arrays (handled manually)
-    modesPaiementClient: z.array(z.string()).optional(),
-    categoriesVente: z.array(z.string()).optional(),
     modesPaiementFournisseur: z.array(z.string()).optional(),
     categoriesAchat: z.array(z.string()).optional(),
+    // Commercial
+    typeCommercial: z.enum(['INTERNE', 'EXTERNE', 'INDEPENDANT']).optional().or(z.literal("")),
+    commission: z.number().optional(),
+    matricule: z.string().optional(),
+    // Prospect
+    sourceProspect: z.enum(['SITE_WEB', 'RESEAU_SOCIAL', 'SALON', 'RECOMMANDATION']).optional().or(z.literal("")),
+    potentiel: z.enum(['FAIBLE', 'MOYEN', 'ELEVE', 'STRATEGIQUE']).optional().or(z.literal("")),
+    probabilite: z.number().optional(),
     notes: z.string().optional(),
     notesProspect: z.string().optional(),
 })
 
-type FormValues = z.infer<typeof baseSchema>
+type EditFormValues = z.infer<typeof editSchema>
 
 const typeLabels: Record<TierType, string> = {
     client: 'Client',
@@ -96,73 +92,115 @@ function SectionTitle({ children }: { children: React.ReactNode }) {
     return <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">{children}</h3>
 }
 
-export function CreateTierDialog({ type, label }: CreateTierDialogProps) {
+export function EditTierDialog({ tier, compact }: EditTierDialogProps) {
     const [open, setOpen] = useState(false)
-    const { addTier } = useTiersStore()
+    const { updateTier } = useTiersStore()
 
-    const form = useForm<FormValues>({
-        resolver: zodResolver(baseSchema),
+    const clientData = tier.type === 'client' ? tier : null
+    const fournisseurData = tier.type === 'fournisseur' ? tier : null
+    const commercialData = tier.type === 'commercial' ? tier : null
+    const prospectData = tier.type === 'prospect' ? tier : null
+
+    const form = useForm<EditFormValues>({
+        resolver: zodResolver(editSchema),
         defaultValues: {
-            name: "", email: "", phoneNumber: "", address: "", city: "",
-            modesPaiementClient: [], categoriesVente: [],
-            modesPaiementFournisseur: [], categoriesAchat: [],
-            estAssujettiTVA: false,
+            name: tier.name || "",
+            shortName: tier.shortName || "",
+            code: tier.code || "",
+            formeJuridique: (tier as any).formeJuridique || "",
+            description: tier.description || "",
+            email: tier.email || "",
+            phoneNumber: tier.phoneNumber || "",
+            fax: (tier as any).fax || "",
+            website: tier.website || "",
+            address: tier.address || "",
+            complement: tier.complement || "",
+            postalCode: tier.postalCode || "",
+            city: tier.city || "",
+            registreCommerce: tier.registreCommerce || "",
+            numeroFiscal: tier.numeroFiscal || "",
+            nui: tier.nui || "",
+            siret: (tier as any).siret || "",
+            // Client-specific
+            ...(clientData && {
+                segment: clientData.segment,
+                familleClient: clientData.familleClient || "",
+                plafondCredit: clientData.plafondCredit,
+                estAssujettiTVA: clientData.estAssujettiTVA || false,
+                modesPaiementClient: clientData.modesPaiementClient || [],
+                categoriesVente: clientData.categoriesVente || [],
+                notes: clientData.notes || "",
+            }),
+            // Fournisseur-specific
+            ...(fournisseurData && {
+                familleFournisseur: fournisseurData.familleFournisseur || "",
+                delaiLivraison: fournisseurData.delaiLivraison || "",
+                conditionsPaiement: fournisseurData.conditionsPaiement || "",
+                certification: fournisseurData.certification || "",
+                modesPaiementFournisseur: fournisseurData.modesPaiementFournisseur || [],
+                categoriesAchat: fournisseurData.categoriesAchat || [],
+                notes: fournisseurData.notes || "",
+            }),
+            // Commercial-specific
+            ...(commercialData && {
+                matricule: commercialData.matricule || "",
+                commission: commercialData.commission,
+            }),
+            // Prospect-specific
+            ...(prospectData && {
+                probabilite: prospectData.probabilite,
+                notes: prospectData.notes || "",
+                notesProspect: prospectData.notesProspect || "",
+            }),
         },
     })
-
-    const onSubmit = async (values: FormValues) => {
-        try {
-            const newTier = {
-                ...values,
-                id: crypto.randomUUID(),
-                type,
-                active: true,
-                postalCode: values.postalCode || "",
-                createdAt: new Date(),
-                updatedAt: new Date(),
-                ...(type === 'client' && {
-                    segment: values.segment || 'ENTREPRISE' as const,
-                    modesPaiementClient: (values.modesPaiementClient || []) as ModePaiementClient[],
-                    categoriesVente: (values.categoriesVente || []) as CategorieTransaction[],
-                }),
-                ...(type === 'fournisseur' && {
-                    modePaiement: 'VIREMENT' as const,
-                    modesPaiementFournisseur: (values.modesPaiementFournisseur || []) as ModePaiementClient[],
-                    categoriesAchat: (values.categoriesAchat || []) as CategorieTransaction[],
-                }),
-                ...(type === 'commercial' && { commission: values.commission || 5, typeCommercial: values.typeCommercial || 'INTERNE' as const }),
-                ...(type === 'prospect' && { potentiel: values.potentiel || 'MOYEN' as const }),
-            } as Tier
-            await addTier(newTier)
-            form.reset()
-            setOpen(false)
-        } catch (error) {
-            console.error("Error creating tier", error)
-        }
-    }
 
     const watchedModesCli = form.watch("modesPaiementClient") || []
     const watchedCatVente = form.watch("categoriesVente") || []
     const watchedModesFou = form.watch("modesPaiementFournisseur") || []
     const watchedCatAchat = form.watch("categoriesAchat") || []
 
-    const toggleArray = (fieldName: keyof FormValues, value: string) => {
+    const toggleArray = (fieldName: keyof EditFormValues, value: string) => {
         const current = (form.getValues(fieldName) as string[]) || []
         const next = current.includes(value) ? current.filter(v => v !== value) : [...current, value]
         form.setValue(fieldName, next)
     }
 
+    const onSubmit = async (values: EditFormValues) => {
+        try {
+            await updateTier(tier.id, {
+                ...values,
+                ...(tier.type === 'client' && {
+                    modesPaiementClient: values.modesPaiementClient as ModePaiementClient[],
+                    categoriesVente: values.categoriesVente as CategorieTransaction[],
+                }),
+                ...(tier.type === 'fournisseur' && {
+                    modesPaiementFournisseur: values.modesPaiementFournisseur as ModePaiementClient[],
+                    categoriesAchat: values.categoriesAchat as CategorieTransaction[],
+                }),
+            } as Partial<Tier>)
+            setOpen(false)
+        } catch (error) {
+            console.error("Error updating tier", error)
+        }
+    }
+
     return (
         <>
-            <Button onClick={() => setOpen(true)} className="bg-blue-600 hover:bg-blue-700 text-white">
-                <Plus className="mr-2 h-4 w-4" />
-                {label || `Nouveau ${typeLabels[type]}`}
-            </Button>
+            {compact ? (
+                <Button variant="ghost" size="sm" onClick={() => setOpen(true)}>
+                    <Edit2 className="h-3.5 w-3.5" />
+                </Button>
+            ) : (
+                <Button variant="outline" size="sm" onClick={() => setOpen(true)}>
+                    <Edit2 className="mr-2 h-4 w-4" /> Modifier
+                </Button>
+            )}
 
             <TiersDraggableDialog
                 isOpen={open}
                 onClose={() => setOpen(false)}
-                title={`Nouveau ${typeLabels[type]}`}
+                title={`Modifier – ${tier.name}`}
                 width="w-[680px]"
             >
                 <Form {...form}>
@@ -181,21 +219,21 @@ export function CreateTierDialog({ type, label }: CreateTierDialogProps) {
                                 <FormField control={form.control} name="name" render={({ field }) => (
                                     <FormItem>
                                         <FormLabel>Nom / Raison Sociale <span className="text-red-500">*</span></FormLabel>
-                                        <FormControl><Input placeholder="Ex: Mon Entreprise S.A.R.L" {...field} /></FormControl>
+                                        <FormControl><Input {...field} /></FormControl>
                                         <FormMessage />
                                     </FormItem>
                                 )} />
                                 <div className="grid grid-cols-2 gap-4">
                                     <FormField control={form.control} name="shortName" render={({ field }) => (
                                         <FormItem>
-                                            <FormLabel>Nom court / Abréviation</FormLabel>
-                                            <FormControl><Input placeholder="Ex: DOMINO" {...field} /></FormControl>
+                                            <FormLabel>Nom court</FormLabel>
+                                            <FormControl><Input placeholder="Abréviation" {...field} /></FormControl>
                                         </FormItem>
                                     )} />
                                     <FormField control={form.control} name="code" render={({ field }) => (
                                         <FormItem>
                                             <FormLabel>Code</FormLabel>
-                                            <FormControl><Input placeholder="Ex: CLI-001" {...field} /></FormControl>
+                                            <FormControl><Input {...field} /></FormControl>
                                         </FormItem>
                                     )} />
                                 </div>
@@ -203,7 +241,7 @@ export function CreateTierDialog({ type, label }: CreateTierDialogProps) {
                                     <FormField control={form.control} name="formeJuridique" render={({ field }) => (
                                         <FormItem>
                                             <FormLabel>Forme Juridique</FormLabel>
-                                            <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                            <Select onValueChange={field.onChange} value={field.value || ""}>
                                                 <FormControl><SelectTrigger><SelectValue placeholder="Sélectionner" /></SelectTrigger></FormControl>
                                                 <SelectContent>
                                                     {['SA', 'SARL', 'SAS', 'GIE', 'Individuel', 'Autre'].map(f => <SelectItem key={f} value={f}>{f}</SelectItem>)}
@@ -211,80 +249,43 @@ export function CreateTierDialog({ type, label }: CreateTierDialogProps) {
                                             </Select>
                                         </FormItem>
                                     )} />
-                                    <FormField control={form.control} name="typeEntreprise" render={({ field }) => (
-                                        <FormItem>
-                                            <FormLabel>Type</FormLabel>
-                                            <Select onValueChange={field.onChange} defaultValue={field.value}>
-                                                <FormControl><SelectTrigger><SelectValue placeholder="Sélectionner" /></SelectTrigger></FormControl>
-                                                <SelectContent>
-                                                    <SelectItem value="PARTICULIER">Particulier</SelectItem>
-                                                    <SelectItem value="ENTREPRISE">Entreprise</SelectItem>
-                                                    <SelectItem value="REVENDEUR">Revendeur</SelectItem>
-                                                </SelectContent>
-                                            </Select>
-                                        </FormItem>
-                                    )} />
-                                </div>
-                                <div className="grid grid-cols-2 gap-4">
-                                    <FormField control={form.control} name="secteurActivite" render={({ field }) => (
-                                        <FormItem>
-                                            <FormLabel>Secteur d'Activité</FormLabel>
-                                            <Select onValueChange={field.onChange} defaultValue={field.value}>
-                                                <FormControl><SelectTrigger><SelectValue placeholder="Sélectionner" /></SelectTrigger></FormControl>
-                                                <SelectContent>
-                                                    <SelectItem value="IT">IT / Tech</SelectItem>
-                                                    <SelectItem value="FINANCE">Finance</SelectItem>
-                                                    <SelectItem value="SANTE">Santé</SelectItem>
-                                                    <SelectItem value="INDUSTRIE">Industrie</SelectItem>
-                                                    <SelectItem value="COMMERCE">Commerce</SelectItem>
-                                                </SelectContent>
-                                            </Select>
-                                        </FormItem>
-                                    )} />
                                     <FormField control={form.control} name="tailleEntreprise" render={({ field }) => (
                                         <FormItem>
                                             <FormLabel>Taille Entreprise</FormLabel>
-                                            <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                            <Select onValueChange={field.onChange} value={field.value || ""}>
                                                 <FormControl><SelectTrigger><SelectValue placeholder="Sélectionner" /></SelectTrigger></FormControl>
                                                 <SelectContent>
-                                                    <SelectItem value="MICRO">Micro (&lt;10 emp.)</SelectItem>
-                                                    <SelectItem value="PME">PME (10-249 emp.)</SelectItem>
-                                                    <SelectItem value="ETI">ETI (250-4999)</SelectItem>
+                                                    <SelectItem value="MICRO">Micro</SelectItem>
+                                                    <SelectItem value="PME">PME</SelectItem>
+                                                    <SelectItem value="ETI">ETI</SelectItem>
                                                     <SelectItem value="GE">Grande Entreprise</SelectItem>
                                                 </SelectContent>
                                             </Select>
                                         </FormItem>
                                     )} />
                                 </div>
-                                <FormField control={form.control} name="dateCreation" render={({ field }) => (
-                                    <FormItem>
-                                        <FormLabel>Date de Création</FormLabel>
-                                        <FormControl><Input type="date" {...field} /></FormControl>
-                                    </FormItem>
-                                )} />
                                 <FormField control={form.control} name="description" render={({ field }) => (
                                     <FormItem>
                                         <FormLabel>Description</FormLabel>
-                                        <FormControl><Textarea placeholder="Brève description..." rows={2} {...field} /></FormControl>
+                                        <FormControl><Textarea rows={2} {...field} /></FormControl>
                                     </FormItem>
                                 )} />
                             </TabsContent>
 
                             {/* TAB 2 – CONTACT */}
                             <TabsContent value="contact" className="space-y-4 pt-4">
-                                <SectionTitle>Coordonnées</SectionTitle>
                                 <div className="grid grid-cols-2 gap-4">
                                     <FormField control={form.control} name="email" render={({ field }) => (
                                         <FormItem>
                                             <FormLabel>Email</FormLabel>
-                                            <FormControl><Input placeholder="contact@exemple.cm" {...field} /></FormControl>
+                                            <FormControl><Input {...field} /></FormControl>
                                             <FormMessage />
                                         </FormItem>
                                     )} />
                                     <FormField control={form.control} name="phoneNumber" render={({ field }) => (
                                         <FormItem>
                                             <FormLabel>Téléphone</FormLabel>
-                                            <FormControl><Input placeholder="+237 6XX XXX XXX" {...field} /></FormControl>
+                                            <FormControl><Input {...field} /></FormControl>
                                         </FormItem>
                                     )} />
                                 </div>
@@ -292,46 +293,39 @@ export function CreateTierDialog({ type, label }: CreateTierDialogProps) {
                                     <FormField control={form.control} name="fax" render={({ field }) => (
                                         <FormItem>
                                             <FormLabel>Fax</FormLabel>
-                                            <FormControl><Input placeholder="+237 2XX XXX XXX" {...field} /></FormControl>
+                                            <FormControl><Input {...field} /></FormControl>
                                         </FormItem>
                                     )} />
                                     <FormField control={form.control} name="website" render={({ field }) => (
                                         <FormItem>
                                             <FormLabel>Site Web</FormLabel>
-                                            <FormControl><Input placeholder="https://www.exemple.cm" {...field} /></FormControl>
+                                            <FormControl><Input {...field} /></FormControl>
                                         </FormItem>
                                     )} />
                                 </div>
-                                <SectionTitle>Adresse</SectionTitle>
                                 <FormField control={form.control} name="address" render={({ field }) => (
                                     <FormItem>
                                         <FormLabel>Adresse</FormLabel>
-                                        <FormControl><Input placeholder="123 Rue de la République" {...field} /></FormControl>
-                                    </FormItem>
-                                )} />
-                                <FormField control={form.control} name="complement" render={({ field }) => (
-                                    <FormItem>
-                                        <FormLabel>Complément d'adresse</FormLabel>
-                                        <FormControl><Input placeholder="Bâtiment B, Porte 4" {...field} /></FormControl>
+                                        <FormControl><Input {...field} /></FormControl>
                                     </FormItem>
                                 )} />
                                 <div className="grid grid-cols-3 gap-4">
                                     <FormField control={form.control} name="city" render={({ field }) => (
                                         <FormItem>
                                             <FormLabel>Ville</FormLabel>
-                                            <FormControl><Input placeholder="Douala" {...field} /></FormControl>
+                                            <FormControl><Input {...field} /></FormControl>
                                         </FormItem>
                                     )} />
                                     <FormField control={form.control} name="postalCode" render={({ field }) => (
                                         <FormItem>
                                             <FormLabel>Code Postal</FormLabel>
-                                            <FormControl><Input placeholder="BP 1234" {...field} /></FormControl>
+                                            <FormControl><Input {...field} /></FormControl>
                                         </FormItem>
                                     )} />
                                     <FormField control={form.control} name="pays" render={({ field }) => (
                                         <FormItem>
                                             <FormLabel>Pays</FormLabel>
-                                            <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                            <Select onValueChange={field.onChange} value={field.value || ""}>
                                                 <FormControl><SelectTrigger><SelectValue placeholder="Pays" /></SelectTrigger></FormControl>
                                                 <SelectContent>
                                                     <SelectItem value="CMR">Cameroun</SelectItem>
@@ -344,32 +338,18 @@ export function CreateTierDialog({ type, label }: CreateTierDialogProps) {
                                         </FormItem>
                                     )} />
                                 </div>
-                                <FormField control={form.control} name="canalPrefere" render={({ field }) => (
-                                    <FormItem>
-                                        <FormLabel>Canal de Communication Préféré</FormLabel>
-                                        <Select onValueChange={field.onChange} defaultValue={field.value}>
-                                            <FormControl><SelectTrigger><SelectValue placeholder="Sélectionner" /></SelectTrigger></FormControl>
-                                            <SelectContent>
-                                                <SelectItem value="EMAIL">Email</SelectItem>
-                                                <SelectItem value="PHONE">Téléphone</SelectItem>
-                                                <SelectItem value="COURRIER">Courrier</SelectItem>
-                                                <SelectItem value="IN_PERSON">En personne</SelectItem>
-                                            </SelectContent>
-                                        </Select>
-                                    </FormItem>
-                                )} />
                             </TabsContent>
 
                             {/* TAB 3 – COMMERCIAL */}
                             <TabsContent value="commercial" className="space-y-4 pt-4">
-                                {type === 'client' && (
+                                {tier.type === 'client' && (
                                     <>
                                         <SectionTitle>Profil Client</SectionTitle>
                                         <div className="grid grid-cols-2 gap-4">
                                             <FormField control={form.control} name="segment" render={({ field }) => (
                                                 <FormItem>
                                                     <FormLabel>Segment</FormLabel>
-                                                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                                    <Select onValueChange={field.onChange} value={field.value || ""}>
                                                         <FormControl><SelectTrigger><SelectValue placeholder="Sélectionner" /></SelectTrigger></FormControl>
                                                         <SelectContent>
                                                             <SelectItem value="PARTICULIER">Particulier</SelectItem>
@@ -382,41 +362,26 @@ export function CreateTierDialog({ type, label }: CreateTierDialogProps) {
                                             <FormField control={form.control} name="familleClient" render={({ field }) => (
                                                 <FormItem>
                                                     <FormLabel>Famille Client</FormLabel>
-                                                    <FormControl><Input placeholder="Ex: Grossiste, Détaillant..." {...field} /></FormControl>
+                                                    <FormControl><Input {...field} /></FormControl>
                                                 </FormItem>
                                             )} />
                                         </div>
-                                        <div className="grid grid-cols-2 gap-4">
-                                            <FormField control={form.control} name="plafondCredit" render={({ field }) => (
-                                                <FormItem>
-                                                    <FormLabel>Plafond Crédit (XAF)</FormLabel>
-                                                    <FormControl><Input type="number" placeholder="500000" {...field} onChange={e => field.onChange(Number(e.target.value))} /></FormControl>
-                                                </FormItem>
-                                            )} />
-                                            <FormField control={form.control} name="canalAquisition" render={({ field }) => (
-                                                <FormItem>
-                                                    <FormLabel>Canal d'Acquisition</FormLabel>
-                                                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                                                        <FormControl><SelectTrigger><SelectValue placeholder="Sélectionner" /></SelectTrigger></FormControl>
-                                                        <SelectContent>
-                                                            <SelectItem value="WEB">Web</SelectItem>
-                                                            <SelectItem value="RESEAU">Réseau</SelectItem>
-                                                            <SelectItem value="RECOMMANDATION">Recommandation</SelectItem>
-                                                        </SelectContent>
-                                                    </Select>
-                                                </FormItem>
-                                            )} />
-                                        </div>
-                                        <SectionTitle>Moyens de Règlement Autorisés</SectionTitle>
+                                        <FormField control={form.control} name="plafondCredit" render={({ field }) => (
+                                            <FormItem>
+                                                <FormLabel>Plafond Crédit (XAF)</FormLabel>
+                                                <FormControl><Input type="number" {...field} onChange={e => field.onChange(Number(e.target.value))} /></FormControl>
+                                            </FormItem>
+                                        )} />
+                                        <SectionTitle>Moyens de Règlement</SectionTitle>
                                         <div className="grid grid-cols-2 gap-2">
                                             {MODES_PAIEMENT.map(m => (
                                                 <div key={m} className="flex items-center gap-2 p-2 rounded-md border border-gray-100 bg-gray-50">
                                                     <Checkbox
-                                                        id={`mp-${m}`}
+                                                        id={`edit-mp-${m}`}
                                                         checked={watchedModesCli.includes(m)}
                                                         onCheckedChange={() => toggleArray("modesPaiementClient", m)}
                                                     />
-                                                    <label htmlFor={`mp-${m}`} className="text-sm text-gray-700 cursor-pointer">{LABEL_MODE_PAIEMENT[m]}</label>
+                                                    <label htmlFor={`edit-mp-${m}`} className="text-sm text-gray-700 cursor-pointer">{LABEL_MODE_PAIEMENT[m]}</label>
                                                 </div>
                                             ))}
                                         </div>
@@ -425,45 +390,43 @@ export function CreateTierDialog({ type, label }: CreateTierDialogProps) {
                                             {CATEGORIES_TRANSACTION.map(c => (
                                                 <div key={c} className="flex items-center gap-2 p-2 rounded-md border border-gray-100 bg-gray-50">
                                                     <Checkbox
-                                                        id={`cv-${c}`}
+                                                        id={`edit-cv-${c}`}
                                                         checked={watchedCatVente.includes(c)}
                                                         onCheckedChange={() => toggleArray("categoriesVente", c)}
                                                     />
-                                                    <label htmlFor={`cv-${c}`} className="text-sm text-gray-700 cursor-pointer">{LABEL_CATEGORIE_TRANSACTION[c]}</label>
+                                                    <label htmlFor={`edit-cv-${c}`} className="text-sm text-gray-700 cursor-pointer">{LABEL_CATEGORIE_TRANSACTION[c]}</label>
                                                 </div>
                                             ))}
                                         </div>
                                         <FormField control={form.control} name="estAssujettiTVA" render={({ field }) => (
                                             <FormItem className="flex items-center gap-3 rounded-md border p-3">
-                                                <FormControl>
-                                                    <Switch checked={field.value} onCheckedChange={field.onChange} />
-                                                </FormControl>
+                                                <FormControl><Switch checked={field.value} onCheckedChange={field.onChange} /></FormControl>
                                                 <FormLabel className="!mt-0">Assujetti à la TVA</FormLabel>
                                             </FormItem>
                                         )} />
                                         <FormField control={form.control} name="notes" render={({ field }) => (
                                             <FormItem>
                                                 <FormLabel>Notes</FormLabel>
-                                                <FormControl><Textarea placeholder="Notes internes..." rows={2} {...field} /></FormControl>
+                                                <FormControl><Textarea rows={3} {...field} /></FormControl>
                                             </FormItem>
                                         )} />
                                     </>
                                 )}
 
-                                {type === 'fournisseur' && (
+                                {tier.type === 'fournisseur' && (
                                     <>
                                         <SectionTitle>Profil Fournisseur</SectionTitle>
                                         <div className="grid grid-cols-2 gap-4">
                                             <FormField control={form.control} name="familleFournisseur" render={({ field }) => (
                                                 <FormItem>
                                                     <FormLabel>Famille Fournisseur</FormLabel>
-                                                    <FormControl><Input placeholder="Ex: Boissons, Alimentaire..." {...field} /></FormControl>
+                                                    <FormControl><Input {...field} /></FormControl>
                                                 </FormItem>
                                             )} />
                                             <FormField control={form.control} name="delaiLivraison" render={({ field }) => (
                                                 <FormItem>
                                                     <FormLabel>Délai de Livraison</FormLabel>
-                                                    <FormControl><Input placeholder="Ex: 48h, 5 jours..." {...field} /></FormControl>
+                                                    <FormControl><Input {...field} /></FormControl>
                                                 </FormItem>
                                             )} />
                                         </div>
@@ -471,13 +434,13 @@ export function CreateTierDialog({ type, label }: CreateTierDialogProps) {
                                             <FormField control={form.control} name="conditionsPaiement" render={({ field }) => (
                                                 <FormItem>
                                                     <FormLabel>Conditions de Paiement</FormLabel>
-                                                    <FormControl><Input placeholder="Ex: 30 jours fin de mois" {...field} /></FormControl>
+                                                    <FormControl><Input {...field} /></FormControl>
                                                 </FormItem>
                                             )} />
                                             <FormField control={form.control} name="certification" render={({ field }) => (
                                                 <FormItem>
                                                     <FormLabel>Certification</FormLabel>
-                                                    <FormControl><Input placeholder="Ex: ISO 9001" {...field} /></FormControl>
+                                                    <FormControl><Input {...field} /></FormControl>
                                                 </FormItem>
                                             )} />
                                         </div>
@@ -486,11 +449,11 @@ export function CreateTierDialog({ type, label }: CreateTierDialogProps) {
                                             {MODES_PAIEMENT.map(m => (
                                                 <div key={m} className="flex items-center gap-2 p-2 rounded-md border border-gray-100 bg-gray-50">
                                                     <Checkbox
-                                                        id={`mf-${m}`}
+                                                        id={`edit-mf-${m}`}
                                                         checked={watchedModesFou.includes(m)}
                                                         onCheckedChange={() => toggleArray("modesPaiementFournisseur", m)}
                                                     />
-                                                    <label htmlFor={`mf-${m}`} className="text-sm text-gray-700 cursor-pointer">{LABEL_MODE_PAIEMENT[m]}</label>
+                                                    <label htmlFor={`edit-mf-${m}`} className="text-sm text-gray-700 cursor-pointer">{LABEL_MODE_PAIEMENT[m]}</label>
                                                 </div>
                                             ))}
                                         </div>
@@ -499,31 +462,31 @@ export function CreateTierDialog({ type, label }: CreateTierDialogProps) {
                                             {CATEGORIES_TRANSACTION.map(c => (
                                                 <div key={c} className="flex items-center gap-2 p-2 rounded-md border border-gray-100 bg-gray-50">
                                                     <Checkbox
-                                                        id={`ca-${c}`}
+                                                        id={`edit-ca-${c}`}
                                                         checked={watchedCatAchat.includes(c)}
                                                         onCheckedChange={() => toggleArray("categoriesAchat", c)}
                                                     />
-                                                    <label htmlFor={`ca-${c}`} className="text-sm text-gray-700 cursor-pointer">{LABEL_CATEGORIE_TRANSACTION[c]}</label>
+                                                    <label htmlFor={`edit-ca-${c}`} className="text-sm text-gray-700 cursor-pointer">{LABEL_CATEGORIE_TRANSACTION[c]}</label>
                                                 </div>
                                             ))}
                                         </div>
                                         <FormField control={form.control} name="notes" render={({ field }) => (
                                             <FormItem>
                                                 <FormLabel>Notes</FormLabel>
-                                                <FormControl><Textarea placeholder="Notes internes..." rows={2} {...field} /></FormControl>
+                                                <FormControl><Textarea rows={3} {...field} /></FormControl>
                                             </FormItem>
                                         )} />
                                     </>
                                 )}
 
-                                {type === 'commercial' && (
+                                {tier.type === 'commercial' && (
                                     <>
                                         <SectionTitle>Profil Commercial</SectionTitle>
                                         <div className="grid grid-cols-2 gap-4">
                                             <FormField control={form.control} name="typeCommercial" render={({ field }) => (
                                                 <FormItem>
                                                     <FormLabel>Type Commercial</FormLabel>
-                                                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                                    <Select onValueChange={field.onChange} value={field.value || ""}>
                                                         <FormControl><SelectTrigger><SelectValue placeholder="Sélectionner" /></SelectTrigger></FormControl>
                                                         <SelectContent>
                                                             <SelectItem value="INTERNE">Interne</SelectItem>
@@ -536,32 +499,32 @@ export function CreateTierDialog({ type, label }: CreateTierDialogProps) {
                                             <FormField control={form.control} name="matricule" render={({ field }) => (
                                                 <FormItem>
                                                     <FormLabel>Matricule</FormLabel>
-                                                    <FormControl><Input placeholder="M-2024-001" {...field} /></FormControl>
+                                                    <FormControl><Input {...field} /></FormControl>
                                                 </FormItem>
                                             )} />
                                         </div>
                                         <FormField control={form.control} name="commission" render={({ field }) => (
                                             <FormItem>
                                                 <FormLabel>Commission (%)</FormLabel>
-                                                <FormControl><Input type="number" placeholder="5" min={0} max={100} {...field} onChange={e => field.onChange(Number(e.target.value))} /></FormControl>
+                                                <FormControl><Input type="number" min={0} max={100} {...field} onChange={e => field.onChange(Number(e.target.value))} /></FormControl>
                                             </FormItem>
                                         )} />
                                     </>
                                 )}
 
-                                {type === 'prospect' && (
+                                {tier.type === 'prospect' && (
                                     <>
                                         <SectionTitle>Profil Prospect</SectionTitle>
                                         <div className="grid grid-cols-2 gap-4">
                                             <FormField control={form.control} name="sourceProspect" render={({ field }) => (
                                                 <FormItem>
                                                     <FormLabel>Source</FormLabel>
-                                                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                                    <Select onValueChange={field.onChange} value={field.value || ""}>
                                                         <FormControl><SelectTrigger><SelectValue placeholder="Sélectionner" /></SelectTrigger></FormControl>
                                                         <SelectContent>
                                                             <SelectItem value="SITE_WEB">Site Web</SelectItem>
                                                             <SelectItem value="RESEAU_SOCIAL">Réseau Social</SelectItem>
-                                                            <SelectItem value="SALON">Salon / Expo</SelectItem>
+                                                            <SelectItem value="SALON">Salon</SelectItem>
                                                             <SelectItem value="RECOMMANDATION">Recommandation</SelectItem>
                                                         </SelectContent>
                                                     </Select>
@@ -570,7 +533,7 @@ export function CreateTierDialog({ type, label }: CreateTierDialogProps) {
                                             <FormField control={form.control} name="potentiel" render={({ field }) => (
                                                 <FormItem>
                                                     <FormLabel>Potentiel</FormLabel>
-                                                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                                    <Select onValueChange={field.onChange} value={field.value || ""}>
                                                         <FormControl><SelectTrigger><SelectValue placeholder="Sélectionner" /></SelectTrigger></FormControl>
                                                         <SelectContent>
                                                             <SelectItem value="FAIBLE">Faible</SelectItem>
@@ -584,14 +547,14 @@ export function CreateTierDialog({ type, label }: CreateTierDialogProps) {
                                         </div>
                                         <FormField control={form.control} name="probabilite" render={({ field }) => (
                                             <FormItem>
-                                                <FormLabel>Probabilité de conversion (%)</FormLabel>
-                                                <FormControl><Input type="number" placeholder="50" min={0} max={100} {...field} onChange={e => field.onChange(Number(e.target.value))} /></FormControl>
+                                                <FormLabel>Probabilité (%)</FormLabel>
+                                                <FormControl><Input type="number" min={0} max={100} {...field} onChange={e => field.onChange(Number(e.target.value))} /></FormControl>
                                             </FormItem>
                                         )} />
                                         <FormField control={form.control} name="notesProspect" render={({ field }) => (
                                             <FormItem>
                                                 <FormLabel>Notes prospect</FormLabel>
-                                                <FormControl><Textarea placeholder="Notes de suivi..." rows={3} {...field} /></FormControl>
+                                                <FormControl><Textarea rows={3} {...field} /></FormControl>
                                             </FormItem>
                                         )} />
                                     </>
@@ -605,27 +568,27 @@ export function CreateTierDialog({ type, label }: CreateTierDialogProps) {
                                     <FormField control={form.control} name="registreCommerce" render={({ field }) => (
                                         <FormItem>
                                             <FormLabel>N° Registre de Commerce</FormLabel>
-                                            <FormControl><Input placeholder="RC/DLA/2020/B/1234" {...field} /></FormControl>
+                                            <FormControl><Input {...field} /></FormControl>
                                         </FormItem>
                                     )} />
                                     <FormField control={form.control} name="numeroFiscal" render={({ field }) => (
                                         <FormItem>
                                             <FormLabel>N° Fiscal</FormLabel>
-                                            <FormControl><Input placeholder="M123456789A" {...field} /></FormControl>
+                                            <FormControl><Input {...field} /></FormControl>
                                         </FormItem>
                                     )} />
                                 </div>
                                 <div className="grid grid-cols-2 gap-4">
                                     <FormField control={form.control} name="nui" render={({ field }) => (
                                         <FormItem>
-                                            <FormLabel>NUI (N° Unique d'Identification)</FormLabel>
-                                            <FormControl><Input placeholder="P000000000000A" {...field} /></FormControl>
+                                            <FormLabel>NUI</FormLabel>
+                                            <FormControl><Input {...field} /></FormControl>
                                         </FormItem>
                                     )} />
                                     <FormField control={form.control} name="siret" render={({ field }) => (
                                         <FormItem>
-                                            <FormLabel>SIRET (si applicable)</FormLabel>
-                                            <FormControl><Input placeholder="12345678901234" {...field} /></FormControl>
+                                            <FormLabel>SIRET</FormLabel>
+                                            <FormControl><Input {...field} /></FormControl>
                                         </FormItem>
                                     )} />
                                 </div>
@@ -633,9 +596,9 @@ export function CreateTierDialog({ type, label }: CreateTierDialogProps) {
                         </Tabs>
 
                         <div className="flex justify-end gap-3 pt-2 border-t border-gray-100 mt-2">
-                            <Button type="button" variant="outline" onClick={() => { form.reset(); setOpen(false); }}>Annuler</Button>
+                            <Button type="button" variant="outline" onClick={() => setOpen(false)}>Annuler</Button>
                             <Button type="submit" className="bg-blue-600 hover:bg-blue-700 text-white">
-                                Créer le {typeLabels[type]}
+                                Enregistrer les modifications
                             </Button>
                         </div>
                     </form>

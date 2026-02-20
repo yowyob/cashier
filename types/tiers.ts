@@ -32,6 +32,27 @@ export type CanalAquisition = 'WEB' | 'RESEAU' | 'RECOMMANDATION';
 // Financial Types
 export type ModePaiementAutorise = 'CHEQUE' | 'VIREMENT' | 'ESPECE' | 'CREDIT' | 'MOBILE_MONEY';
 
+// Payment Methods for Clients/Fournisseurs
+export type ModePaiementClient = 'CHEQUE' | 'PAR_COMPTE' | 'CREDIT' | 'ESPECES' | 'VIREMENT';
+
+// Transaction Categories (pricing tiers)
+export type CategorieTransaction = 'DETAIL' | 'DEMI_GROS' | 'GROS' | 'SUPER_GROS';
+
+export const LABEL_MODE_PAIEMENT: Record<ModePaiementClient, string> = {
+    CHEQUE: 'Chèque',
+    PAR_COMPTE: 'Par Compte',
+    CREDIT: 'Crédit',
+    ESPECES: 'Espèces',
+    VIREMENT: 'Virement',
+};
+
+export const LABEL_CATEGORIE_TRANSACTION: Record<CategorieTransaction, string> = {
+    DETAIL: 'Détail',
+    DEMI_GROS: 'Demi-Gros',
+    GROS: 'Gros',
+    SUPER_GROS: 'Super Gros',
+};
+
 export interface FinancialInfo {
     solde: number;
     modesPaiementAutorises: ModePaiementAutorise[];
@@ -210,6 +231,7 @@ export interface TiersClient extends TierBase {
     };
     notes?: string;
     factures?: Facture[];
+    produitsHistorique?: HistoriqueProduit[];
     communications?: Communication[];
     balanceStatusData?: {
         magasin: string;
@@ -224,6 +246,9 @@ export interface TiersClient extends TierBase {
         libelle: string;
         autorise: boolean;
     }[];
+    // New: explicit payment methods and category flags
+    modesPaiementClient?: ModePaiementClient[];
+    categoriesVente?: CategorieTransaction[];
     categorie?: 'A' | 'B' | 'C';
     siret?: string;
     tva?: string;
@@ -241,9 +266,13 @@ export interface TiersFournisseur extends TierBase {
     formeJuridique?: string;
     familleFournisseur?: string;
     factures?: Facture[];
+    produitsHistorique?: HistoriqueProduit[];
     notes?: string;
     codeFournisseur?: string;
     conditionsPaiement?: string;
+    // New: explicit payment methods and category flags
+    modesPaiementFournisseur?: ModePaiementClient[];
+    categoriesAchat?: CategorieTransaction[];
 }
 
 export interface TiersCommercial extends TierBase {
