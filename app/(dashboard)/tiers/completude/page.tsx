@@ -18,7 +18,7 @@ const typeConfig: Record<string, { color: string; bg: string; href: (id: string)
 
 function TierRow({ tier }: { tier: Tier }) {
     const cfg = typeConfig[tier.type]
-    const hasComptable = !!tier.compteComptable
+    const hasComptable = !!tier.accountingAccount
     const hasBancaire = !!(tier.comptesBancaires && tier.comptesBancaires.length > 0)
 
     return (
@@ -38,7 +38,7 @@ function TierRow({ tier }: { tier: Tier }) {
                 <div className="flex items-center gap-1.5">
                     <Building className="h-3.5 w-3.5 text-gray-400" />
                     {hasComptable ? (
-                        <span className="text-xs font-mono font-bold text-green-700 bg-green-50 px-2 py-0.5 rounded">{tier.compteComptable}</span>
+                        <span className="text-xs font-mono font-bold text-green-700 bg-green-50 px-2 py-0.5 rounded">{tier.accountingAccount}</span>
                     ) : (
                         <AssignCompteDialog tier={tier} type="comptable" />
                     )}
@@ -60,9 +60,9 @@ function TierRow({ tier }: { tier: Tier }) {
 }
 
 function CompletionStats({ tiers }: { tiers: Tier[] }) {
-    const withComptable = tiers.filter(t => t.compteComptable).length
+    const withComptable = tiers.filter(t => t.accountingAccount).length
     const withBancaire = tiers.filter(t => t.comptesBancaires && t.comptesBancaires.length > 0).length
-    const withBoth = tiers.filter(t => t.compteComptable && t.comptesBancaires && t.comptesBancaires.length > 0).length
+    const withBoth = tiers.filter(t => t.accountingAccount && t.comptesBancaires && t.comptesBancaires.length > 0).length
     const total = tiers.length
 
     const pct = (v: number) => total > 0 ? Math.round((v / total) * 100) : 0
@@ -92,10 +92,10 @@ function CompletionStats({ tiers }: { tiers: Tier[] }) {
 export default function CompletudeComptablePage() {
     const { tiers } = useTiersStore()
 
-    const sansComptable = tiers.filter(t => !t.compteComptable)
+    const sansComptable = tiers.filter(t => !t.accountingAccount)
     const sansBancaire = tiers.filter(t => !t.comptesBancaires || t.comptesBancaires.length === 0)
-    const sansTous = tiers.filter(t => !t.compteComptable && (!t.comptesBancaires || t.comptesBancaires.length === 0))
-    const complets = tiers.filter(t => t.compteComptable && t.comptesBancaires && t.comptesBancaires.length > 0)
+    const sansTous = tiers.filter(t => !t.accountingAccount && (!t.comptesBancaires || t.comptesBancaires.length === 0))
+    const complets = tiers.filter(t => t.accountingAccount && t.comptesBancaires && t.comptesBancaires.length > 0)
 
     return (
         <div className="space-y-6">

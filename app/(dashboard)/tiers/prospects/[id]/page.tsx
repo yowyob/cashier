@@ -35,7 +35,7 @@ function ConvertToClientDialog({ prospect, onConvert }: { prospect: TiersProspec
             ...prospect,
             type: 'client',
             id: crypto.randomUUID(),
-            compteComptable: undefined,
+            accountingAccount: undefined,
             segment: 'ENTREPRISE',
             active: true,
             createdAt: new Date(),
@@ -123,7 +123,7 @@ export default function ProspectDetailPage() {
                         <div className="flex items-center gap-2 flex-wrap">
                             <h1 className="text-2xl font-bold text-gray-900">{prospect.name}</h1>
                             <Badge className="bg-orange-100 text-orange-800">Prospect</Badge>
-                            {prospect.potentiel && <Badge className={potentielColors[prospect.potentiel]}>{prospect.potentiel}</Badge>}
+                            {prospect.potential && <Badge className={potentielColors[prospect.potential]}>{prospect.potential}</Badge>}
                         </div>
                         <p className="text-sm text-gray-500">{prospect.code} · {prospect.contact} · {prospect.city}</p>
                     </div>
@@ -146,9 +146,9 @@ export default function ProspectDetailPage() {
                         <Star className="h-5 w-5 text-orange-600" />
                         <span className="font-semibold text-orange-800">Probabilité de conversion</span>
                     </div>
-                    <span className="text-2xl font-bold text-orange-700">{prospect.probabilite || 0}%</span>
+                    <span className="text-2xl font-bold text-orange-700">{prospect.probability || 0}%</span>
                 </div>
-                <Progress value={prospect.probabilite || 0} className="h-3" />
+                <Progress value={prospect.probability || 0} className="h-3" />
                 <div className="flex justify-between text-xs text-orange-600 mt-1">
                     <span>0% Faible</span>
                     <span>50% Moyen</span>
@@ -169,9 +169,9 @@ export default function ProspectDetailPage() {
                     </div>
                     <hr className="border-gray-100" />
                     <div className="space-y-2 text-xs text-gray-500">
-                        {prospect.sourceProspect && <div className="flex justify-between"><span>Source</span><Badge className="bg-orange-100 text-orange-800 text-[10px]">{prospect.sourceProspect}</Badge></div>}
+                        {prospect.source && <div className="flex justify-between"><span>Source</span><Badge className="bg-orange-100 text-orange-800 text-[10px]">{prospect.source}</Badge></div>}
                         {prospect.familleProspect && <div className="flex justify-between"><span>Famille</span><span className="font-medium text-gray-700">{prospect.familleProspect}</span></div>}
-                        {prospect.dateConversion && <div className="flex justify-between"><span>Date visée</span><span>{format(new Date(prospect.dateConversion), 'dd/MM/yyyy')}</span></div>}
+                        {prospect.conversionDate && <div className="flex justify-between"><span>Date visée</span><span>{format(new Date(prospect.conversionDate), 'dd/MM/yyyy')}</span></div>}
                     </div>
                     {prospect.notes && (
                         <div className="rounded-lg bg-yellow-50 border border-yellow-200 p-3 text-xs text-yellow-800">

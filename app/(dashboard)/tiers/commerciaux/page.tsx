@@ -62,8 +62,8 @@ const columns: ColumnDef<TiersCommercial>[] = [
     { accessorKey: "phoneNumber", header: "Téléphone" },
     { accessorKey: "city", header: "Ville" },
     {
-        accessorKey: "typeCommercial", header: "Type", cell: ({ row }) => {
-            const t = row.original.typeCommercial
+        accessorKey: "agentType", header: "Type", cell: ({ row }) => {
+            const t = row.original.agentType
             return t ? <Badge className={typeColors[t] || 'bg-gray-100 text-gray-800'}>{t}</Badge> : null
         }
     },

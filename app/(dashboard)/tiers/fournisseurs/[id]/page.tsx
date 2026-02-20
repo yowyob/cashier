@@ -85,7 +85,7 @@ export default function FournisseurDetailPage() {
 
             {/* Alerts */}
             <div className="flex flex-wrap gap-2">
-                {!fournisseur.compteComptable && (
+                {!fournisseur.accountingAccount && (
                     <div className="flex items-center gap-2 rounded-lg border border-orange-200 bg-orange-50 px-3 py-2 text-sm text-orange-700">
                         <span className="font-medium">⚠ Compte comptable non assigné</span>
                         <AssignCompteDialog tier={fournisseur} type="comptable" />
@@ -114,11 +114,11 @@ export default function FournisseurDetailPage() {
                         </div>
                         <hr className="border-gray-100" />
                         <div className="space-y-2 text-xs text-gray-500">
-                            {fournisseur.compteComptable && <div className="flex justify-between"><span>Compte Comptable</span><span className="font-mono font-bold text-gray-800">{fournisseur.compteComptable}</span></div>}
+                            {fournisseur.accountingAccount && <div className="flex justify-between"><span>Compte Comptable</span><span className="font-mono font-bold text-gray-800">{fournisseur.accountingAccount}</span></div>}
                             {fournisseur.formeJuridique && <div className="flex justify-between"><span>Forme Juridique</span><span className="font-medium text-gray-700">{fournisseur.formeJuridique}</span></div>}
-                            {fournisseur.registreCommerce && <div className="flex justify-between"><span>RC</span><span className="font-medium text-gray-700">{fournisseur.registreCommerce}</span></div>}
-                            {fournisseur.numeroFiscal && <div className="flex justify-between"><span>N° Fiscal</span><span className="font-medium text-gray-700">{fournisseur.numeroFiscal}</span></div>}
-                            {fournisseur.delaiLivraison && <div className="flex justify-between"><span>Délai livraison</span><span className="font-medium text-gray-700">{fournisseur.delaiLivraison}</span></div>}
+                            {fournisseur.tradeRegistryNumber && <div className="flex justify-between"><span>RC</span><span className="font-medium text-gray-700">{fournisseur.tradeRegistryNumber}</span></div>}
+                            {fournisseur.taxNumber && <div className="flex justify-between"><span>N° Fiscal</span><span className="font-medium text-gray-700">{fournisseur.taxNumber}</span></div>}
+                            {fournisseur.deliveryLeadTime && <div className="flex justify-between"><span>Délai livraison</span><span className="font-medium text-gray-700">{fournisseur.deliveryLeadTime}</span></div>}
                             {fournisseur.conditionsPaiement && <div className="flex justify-between"><span>Conditions paiement</span><span className="font-medium text-gray-700 text-right">{fournisseur.conditionsPaiement}</span></div>}
                             {fournisseur.certification && <div className="flex justify-between"><span>Certification</span><span className="font-medium text-gray-700">{fournisseur.certification}</span></div>}
                         </div>

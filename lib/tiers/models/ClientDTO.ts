@@ -1,6 +1,7 @@
 export type ClientDTO = {
     readonly id?: string;
-    readonly compteComptable?: string;
+    readonly accountingAccount?: string;
+    bankAccountNumber?: string;
     code?: string;
     name: string;
     shortName?: string;
@@ -14,24 +15,29 @@ export type ClientDTO = {
     complement?: string;
     postalCode?: string;
     city?: string;
-    pays?: string;
-    secteurActivite?: string;
-    tailleEntreprise?: string;
+    country?: string;
+    businessSector?: string;
+    companySize?: string;
     dateCreation?: string;
-    registreCommerce?: string;
-    numeroFiscal?: string;
-    canalPrefere?: string;
+    tradeRegistryNumber?: string;
+    taxNumber?: string;
+    preferredChannel?: string;
     typeEntreprise?: string;
     tenantId?: string;
     agencyId?: string;
-    typeClientOhada?: ClientDTO.typeClientOhada;
+    ohadaType?: ClientDTO.ohadaType;
     segment?: ClientDTO.segment;
-    plafondCredit?: number;
-    canalAquisition?: string;
-    estAssujettiTVA?: boolean;
+    creditLimit?: number;
+    acquisitionChannel?: string;
+    vatSubject?: boolean;
+    customerVatNumber?: string;
+    retailSale?: boolean;
+    semiWholesale?: boolean;
+    wholesale?: boolean;
+    superWholesale?: boolean;
 };
 export namespace ClientDTO {
-    export enum typeClientOhada {
+    export enum ohadaType {
         ORDINAIRE = 'ORDINAIRE',
         ETAT = 'ETAT',
         GROUPE = 'GROUPE',

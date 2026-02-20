@@ -47,7 +47,7 @@ export default function TiersStatsPage() {
     const overdueActions = pendingActions.filter(a => new Date(a.date) < new Date())
 
     // === COMPLETUDE ===
-    const withComptable = tiers.filter(t => t.compteComptable)
+    const withComptable = tiers.filter(t => t.accountingAccount)
     const withBancaire = tiers.filter(t => t.comptesBancaires && t.comptesBancaires.length > 0)
 
     // === CLIENTS ===
@@ -60,12 +60,12 @@ export default function TiersStatsPage() {
     const totalSoldeClients = clients.reduce((acc, c) => acc + (c.financial?.solde || 0), 0)
 
     // === PROSPECTS ===
-    const prospectsEleves = prospects.filter(p => p.potentiel === 'ELEVE' || p.potentiel === 'STRATEGIQUE')
+    const prospectsEleves = prospects.filter(p => p.potential === 'ELEVE' || p.potential === 'STRATEGIQUE')
     const avgProbabilite = prospects.length > 0
-        ? Math.round(prospects.reduce((acc, p) => acc + (p.probabilite || 0), 0) / prospects.length)
+        ? Math.round(prospects.reduce((acc, p) => acc + (p.probability || 0), 0) / prospects.length)
         : 0
     const sourceCounts = prospects.reduce((acc, p) => {
-        if (p.sourceProspect) acc[p.sourceProspect] = (acc[p.sourceProspect] || 0) + 1
+        if (p.source) acc[p.source] = (acc[p.source] || 0) + 1
         return acc
     }, {} as Record<string, number>)
 
@@ -133,10 +133,10 @@ export default function TiersStatsPage() {
             <section>
                 <SectionTitle icon={UserPlus} title="Prospects & Pipeline" color="text-orange-600" />
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
-                    <StatCard label="Total prospects" value={prospects.length} sub={`${prospectsEleves.length} à fort potentiel`} icon={UserPlus} color="text-orange-600" bg="bg-orange-50" />
+                    <StatCard label="Total prospects" value={prospects.length} sub={`${prospectsEleves.length} à fort potential`} icon={UserPlus} color="text-orange-600" bg="bg-orange-50" />
                     <StatCard label="Probabilité moy." value={`${avgProbabilite}%`} icon={TrendingUp} color="text-orange-600" bg="bg-orange-50" />
                     <StatCard label="Forte priorité" value={prospectsEleves.length} sub="ELEVE + STRATEGIQUE" icon={Award} color="text-red-600" bg="bg-red-50" />
-                    <StatCard label="Prêts à convertir" value={prospects.filter(p => (p.probabilite || 0) >= 70).length} sub="Probabilité ≥ 70%" icon={CheckCircle2} color="text-green-600" bg="bg-green-50" />
+                    <StatCard label="Prêts à convertir" value={prospects.filter(p => (p.probability || 0) >= 70).length} sub="Probabilité ≥ 70%" icon={CheckCircle2} color="text-green-600" bg="bg-green-50" />
                 </div>
                 {Object.keys(sourceCounts).length > 0 && (
                     <div className="rounded-xl border border-gray-200 bg-white p-5">
@@ -158,10 +158,10 @@ export default function TiersStatsPage() {
                         <p className="text-sm font-medium text-gray-700 mb-4">Pipeline de conversion</p>
                         <div className="space-y-2">
                             {[
-                                { label: 'STRATEGIQUE', color: 'bg-red-500', data: prospects.filter(p => p.potentiel === 'STRATEGIQUE') },
-                                { label: 'ELEVE', color: 'bg-orange-500', data: prospects.filter(p => p.potentiel === 'ELEVE') },
-                                { label: 'MOYEN', color: 'bg-yellow-500', data: prospects.filter(p => p.potentiel === 'MOYEN') },
-                                { label: 'FAIBLE', color: 'bg-gray-400', data: prospects.filter(p => p.potentiel === 'FAIBLE') },
+                                { label: 'STRATEGIQUE', color: 'bg-red-500', data: prospects.filter(p => p.potential === 'STRATEGIQUE') },
+                                { label: 'ELEVE', color: 'bg-orange-500', data: prospects.filter(p => p.potential === 'ELEVE') },
+                                { label: 'MOYEN', color: 'bg-yellow-500', data: prospects.filter(p => p.potential === 'MOYEN') },
+                                { label: 'FAIBLE', color: 'bg-gray-400', data: prospects.filter(p => p.potential === 'FAIBLE') },
                             ].map(({ label, color, data }) => (
                                 <div key={label} className="flex items-center gap-3">
                                     <span className="text-xs w-24 text-gray-500">{label}</span>

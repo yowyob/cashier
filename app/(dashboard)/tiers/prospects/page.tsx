@@ -64,14 +64,14 @@ const columns: ColumnDef<TiersProspect>[] = [
     { accessorKey: "phoneNumber", header: "Téléphone" },
     { accessorKey: "city", header: "Ville" },
     {
-        accessorKey: "potentiel", header: "Potentiel", cell: ({ row }) => {
-            const p = row.original.potentiel
+        accessorKey: "potential", header: "Potentiel", cell: ({ row }) => {
+            const p = row.original.potential
             return p ? <Badge className={potentielColors[p] || 'bg-gray-100 text-gray-800'}>{p}</Badge> : null
         }
     },
     {
-        accessorKey: "probabilite", header: "Probabilité", cell: ({ row }) => {
-            const prob = row.original.probabilite
+        accessorKey: "probability", header: "Probabilité", cell: ({ row }) => {
+            const prob = row.original.probability
             if (!prob) return null
             return <div className="flex items-center gap-2 min-w-[80px]"><Progress value={prob} className="h-2" /><span className="text-xs text-gray-500">{prob}%</span></div>
         }

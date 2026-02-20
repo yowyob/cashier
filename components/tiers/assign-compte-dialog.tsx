@@ -13,7 +13,7 @@ import { Tier, CompteBancaire } from "@/types/tiers"
 import { Plus, Building, CreditCard } from "lucide-react"
 
 const comptableSchema = z.object({
-    compteComptable: z.string().min(3, "Le numéro de compte doit avoir au moins 3 caractères").regex(/^[0-9]/, "Doit commencer par un chiffre (ex: 411001, 401002)"),
+    accountingAccount: z.string().min(3, "Le numéro de compte doit avoir au moins 3 caractères").regex(/^[0-9]/, "Doit commencer par un chiffre (ex: 411001, 401002)"),
 })
 
 const bancaireSchema = z.object({
@@ -34,7 +34,7 @@ export function AssignCompteDialog({ tier, type, compact = false }: AssignCompte
 
     const comptableForm = useForm<z.infer<typeof comptableSchema>>({
         resolver: zodResolver(comptableSchema),
-        defaultValues: { compteComptable: tier.compteComptable || '' },
+        defaultValues: { accountingAccount: tier.accountingAccount || '' },
     })
 
     const bancaireForm = useForm<z.infer<typeof bancaireSchema>>({
@@ -43,7 +43,7 @@ export function AssignCompteDialog({ tier, type, compact = false }: AssignCompte
     })
 
     const handleAssignComptable = async (values: z.infer<typeof comptableSchema>) => {
-        await updateTier(tier.id, { compteComptable: values.compteComptable })
+        await updateTier(tier.id, { accountingAccount: values.accountingAccount })
         setOpen(false)
     }
 
@@ -63,7 +63,7 @@ export function AssignCompteDialog({ tier, type, compact = false }: AssignCompte
     const isComptable = type === 'comptable'
     const Icon = isComptable ? Building : CreditCard
     const buttonLabel = isComptable
-        ? (tier.compteComptable ? 'Modifier compte' : 'Assigner')
+        ? (tier.accountingAccount ? 'Modifier compte' : 'Assigner')
         : 'Ajouter compte'
 
     const suggestedAccount = isComptable
@@ -101,7 +101,7 @@ export function AssignCompteDialog({ tier, type, compact = false }: AssignCompte
                                 </div>
                                 <FormField
                                     control={comptableForm.control}
-                                    name="compteComptable"
+                                    name="accountingAccount"
                                     render={({ field }) => (
                                         <FormItem>
                                             <FormLabel>Numéro de Compte Comptable</FormLabel>

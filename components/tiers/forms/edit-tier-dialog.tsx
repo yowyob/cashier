@@ -34,8 +34,8 @@ const editSchema = z.object({
     code: z.string().optional(),
     typeEntreprise: z.enum(['PARTICULIER', 'ENTREPRISE', 'REVENDEUR']).optional().or(z.literal("")),
     formeJuridique: z.string().optional(),
-    secteurActivite: z.enum(['IT', 'FINANCE', 'SANTE', 'INDUSTRIE', 'COMMERCE']).optional().or(z.literal("")),
-    tailleEntreprise: z.enum(['MICRO', 'PME', 'ETI', 'GE']).optional().or(z.literal("")),
+    businessSector: z.enum(['IT', 'FINANCE', 'SANTE', 'INDUSTRIE', 'COMMERCE']).optional().or(z.literal("")),
+    companySize: z.enum(['MICRO', 'PME', 'ETI', 'GE']).optional().or(z.literal("")),
     dateCreation: z.string().optional(),
     description: z.string().optional(),
     email: z.string().email("Email invalide").optional().or(z.literal("")),
@@ -47,36 +47,35 @@ const editSchema = z.object({
     postalCode: z.string().optional(),
     city: z.string().optional(),
     pays: z.enum(['CMR', 'CG', 'TC', 'GB', 'CI']).optional().or(z.literal("")),
-    canalPrefere: z.enum(['EMAIL', 'PHONE', 'COURRIER', 'IN_PERSON']).optional().or(z.literal("")),
-    registreCommerce: z.string().optional(),
-    numeroFiscal: z.string().optional(),
+    preferredChannel: z.enum(['EMAIL', 'PHONE', 'COURRIER', 'IN_PERSON']).optional().or(z.literal("")),
+    tradeRegistryNumber: z.string().optional(),
+    taxNumber: z.string().optional(),
     nui: z.string().optional(),
     siret: z.string().optional(),
     // Client
     segment: z.enum(['PARTICULIER', 'ENTREPRISE', 'REVENDEUR']).optional().or(z.literal("")),
     familleClient: z.string().optional(),
-    plafondCredit: z.number().optional(),
-    canalAquisition: z.enum(['WEB', 'RESEAU', 'RECOMMANDATION']).optional().or(z.literal("")),
-    estAssujettiTVA: z.boolean().optional(),
+    creditLimit: z.number().optional(),
+    acquisitionChannel: z.enum(['WEB', 'RESEAU', 'RECOMMANDATION']).optional().or(z.literal("")),
+    vatSubject: z.boolean().optional(),
     modesPaiementClient: z.array(z.string()).optional(),
     categoriesVente: z.array(z.string()).optional(),
     // Fournisseur
     familleFournisseur: z.string().optional(),
-    delaiLivraison: z.string().optional(),
+    deliveryLeadTime: z.string().optional(),
     conditionsPaiement: z.string().optional(),
     certification: z.string().optional(),
     modesPaiementFournisseur: z.array(z.string()).optional(),
     categoriesAchat: z.array(z.string()).optional(),
     // Commercial
-    typeCommercial: z.enum(['INTERNE', 'EXTERNE', 'INDEPENDANT']).optional().or(z.literal("")),
+    agentType: z.enum(['INTERNE', 'EXTERNE', 'INDEPENDANT']).optional().or(z.literal("")),
     commission: z.number().optional(),
     matricule: z.string().optional(),
     // Prospect
-    sourceProspect: z.enum(['SITE_WEB', 'RESEAU_SOCIAL', 'SALON', 'RECOMMANDATION']).optional().or(z.literal("")),
-    potentiel: z.enum(['FAIBLE', 'MOYEN', 'ELEVE', 'STRATEGIQUE']).optional().or(z.literal("")),
-    probabilite: z.number().optional(),
+    source: z.enum(['SITE_WEB', 'RESEAU_SOCIAL', 'SALON', 'RECOMMANDATION']).optional().or(z.literal("")),
+    potential: z.enum(['FAIBLE', 'MOYEN', 'ELEVE', 'STRATEGIQUE']).optional().or(z.literal("")),
+    probability: z.number().optional(),
     notes: z.string().optional(),
-    notesProspect: z.string().optional(),
 })
 
 type EditFormValues = z.infer<typeof editSchema>
@@ -117,16 +116,16 @@ export function EditTierDialog({ tier, compact }: EditTierDialogProps) {
             complement: tier.complement || "",
             postalCode: tier.postalCode || "",
             city: tier.city || "",
-            registreCommerce: tier.registreCommerce || "",
-            numeroFiscal: tier.numeroFiscal || "",
+            tradeRegistryNumber: tier.tradeRegistryNumber || "",
+            taxNumber: tier.taxNumber || "",
             nui: tier.nui || "",
             siret: (tier as any).siret || "",
             // Client-specific
             ...(clientData && {
                 segment: clientData.segment,
                 familleClient: clientData.familleClient || "",
-                plafondCredit: clientData.plafondCredit,
-                estAssujettiTVA: clientData.estAssujettiTVA || false,
+                creditLimit: clientData.creditLimit,
+                vatSubject: clientData.vatSubject || false,
                 modesPaiementClient: clientData.modesPaiementClient || [],
                 categoriesVente: clientData.categoriesVente || [],
                 notes: clientData.notes || "",
@@ -134,7 +133,7 @@ export function EditTierDialog({ tier, compact }: EditTierDialogProps) {
             // Fournisseur-specific
             ...(fournisseurData && {
                 familleFournisseur: fournisseurData.familleFournisseur || "",
-                delaiLivraison: fournisseurData.delaiLivraison || "",
+                deliveryLeadTime: fournisseurData.deliveryLeadTime || "",
                 conditionsPaiement: fournisseurData.conditionsPaiement || "",
                 certification: fournisseurData.certification || "",
                 modesPaiementFournisseur: fournisseurData.modesPaiementFournisseur || [],
@@ -148,9 +147,8 @@ export function EditTierDialog({ tier, compact }: EditTierDialogProps) {
             }),
             // Prospect-specific
             ...(prospectData && {
-                probabilite: prospectData.probabilite,
+                probability: prospectData.probability,
                 notes: prospectData.notes || "",
-                notesProspect: prospectData.notesProspect || "",
             }),
         },
     })
@@ -249,7 +247,7 @@ export function EditTierDialog({ tier, compact }: EditTierDialogProps) {
                                             </Select>
                                         </FormItem>
                                     )} />
-                                    <FormField control={form.control} name="tailleEntreprise" render={({ field }) => (
+                                    <FormField control={form.control} name="companySize" render={({ field }) => (
                                         <FormItem>
                                             <FormLabel>Taille Entreprise</FormLabel>
                                             <Select onValueChange={field.onChange} value={field.value || ""}>
@@ -366,7 +364,7 @@ export function EditTierDialog({ tier, compact }: EditTierDialogProps) {
                                                 </FormItem>
                                             )} />
                                         </div>
-                                        <FormField control={form.control} name="plafondCredit" render={({ field }) => (
+                                        <FormField control={form.control} name="creditLimit" render={({ field }) => (
                                             <FormItem>
                                                 <FormLabel>Plafond Crédit (XAF)</FormLabel>
                                                 <FormControl><Input type="number" {...field} onChange={e => field.onChange(Number(e.target.value))} /></FormControl>
@@ -398,7 +396,7 @@ export function EditTierDialog({ tier, compact }: EditTierDialogProps) {
                                                 </div>
                                             ))}
                                         </div>
-                                        <FormField control={form.control} name="estAssujettiTVA" render={({ field }) => (
+                                        <FormField control={form.control} name="vatSubject" render={({ field }) => (
                                             <FormItem className="flex items-center gap-3 rounded-md border p-3">
                                                 <FormControl><Switch checked={field.value} onCheckedChange={field.onChange} /></FormControl>
                                                 <FormLabel className="!mt-0">Assujetti à la TVA</FormLabel>
@@ -423,7 +421,7 @@ export function EditTierDialog({ tier, compact }: EditTierDialogProps) {
                                                     <FormControl><Input {...field} /></FormControl>
                                                 </FormItem>
                                             )} />
-                                            <FormField control={form.control} name="delaiLivraison" render={({ field }) => (
+                                            <FormField control={form.control} name="deliveryLeadTime" render={({ field }) => (
                                                 <FormItem>
                                                     <FormLabel>Délai de Livraison</FormLabel>
                                                     <FormControl><Input {...field} /></FormControl>
@@ -483,7 +481,7 @@ export function EditTierDialog({ tier, compact }: EditTierDialogProps) {
                                     <>
                                         <SectionTitle>Profil Commercial</SectionTitle>
                                         <div className="grid grid-cols-2 gap-4">
-                                            <FormField control={form.control} name="typeCommercial" render={({ field }) => (
+                                            <FormField control={form.control} name="agentType" render={({ field }) => (
                                                 <FormItem>
                                                     <FormLabel>Type Commercial</FormLabel>
                                                     <Select onValueChange={field.onChange} value={field.value || ""}>
@@ -516,7 +514,7 @@ export function EditTierDialog({ tier, compact }: EditTierDialogProps) {
                                     <>
                                         <SectionTitle>Profil Prospect</SectionTitle>
                                         <div className="grid grid-cols-2 gap-4">
-                                            <FormField control={form.control} name="sourceProspect" render={({ field }) => (
+                                            <FormField control={form.control} name="source" render={({ field }) => (
                                                 <FormItem>
                                                     <FormLabel>Source</FormLabel>
                                                     <Select onValueChange={field.onChange} value={field.value || ""}>
@@ -530,7 +528,7 @@ export function EditTierDialog({ tier, compact }: EditTierDialogProps) {
                                                     </Select>
                                                 </FormItem>
                                             )} />
-                                            <FormField control={form.control} name="potentiel" render={({ field }) => (
+                                            <FormField control={form.control} name="potential" render={({ field }) => (
                                                 <FormItem>
                                                     <FormLabel>Potentiel</FormLabel>
                                                     <Select onValueChange={field.onChange} value={field.value || ""}>
@@ -545,13 +543,13 @@ export function EditTierDialog({ tier, compact }: EditTierDialogProps) {
                                                 </FormItem>
                                             )} />
                                         </div>
-                                        <FormField control={form.control} name="probabilite" render={({ field }) => (
+                                        <FormField control={form.control} name="probability" render={({ field }) => (
                                             <FormItem>
                                                 <FormLabel>Probabilité (%)</FormLabel>
                                                 <FormControl><Input type="number" min={0} max={100} {...field} onChange={e => field.onChange(Number(e.target.value))} /></FormControl>
                                             </FormItem>
                                         )} />
-                                        <FormField control={form.control} name="notesProspect" render={({ field }) => (
+                                        <FormField control={form.control} name="notes" render={({ field }) => (
                                             <FormItem>
                                                 <FormLabel>Notes prospect</FormLabel>
                                                 <FormControl><Textarea rows={3} {...field} /></FormControl>
@@ -565,13 +563,13 @@ export function EditTierDialog({ tier, compact }: EditTierDialogProps) {
                             <TabsContent value="documents" className="space-y-4 pt-4">
                                 <SectionTitle>Identification Fiscale & Légale</SectionTitle>
                                 <div className="grid grid-cols-2 gap-4">
-                                    <FormField control={form.control} name="registreCommerce" render={({ field }) => (
+                                    <FormField control={form.control} name="tradeRegistryNumber" render={({ field }) => (
                                         <FormItem>
                                             <FormLabel>N° Registre de Commerce</FormLabel>
                                             <FormControl><Input {...field} /></FormControl>
                                         </FormItem>
                                     )} />
-                                    <FormField control={form.control} name="numeroFiscal" render={({ field }) => (
+                                    <FormField control={form.control} name="taxNumber" render={({ field }) => (
                                         <FormItem>
                                             <FormLabel>N° Fiscal</FormLabel>
                                             <FormControl><Input {...field} /></FormControl>

@@ -175,7 +175,7 @@ export interface TierBase {
     agencyId?: string;
     code?: string;
     name: string;
-    compteComptable?: string;
+    accountingAccount?: string;
     nui?: string;
     shortName?: string;
     longName?: string;
@@ -189,13 +189,13 @@ export interface TierBase {
     postalCode: string;
     city: string;
     pays?: Pays;
-    secteurActivite?: SecteurActivite;
-    tailleEntreprise?: TailleEntreprise;
+    businessSector?: SecteurActivite;
+    companySize?: TailleEntreprise;
     dateCreation?: Date;
-    registreCommerce?: string;
-    numeroFiscal?: string;
+    tradeRegistryNumber?: string;
+    taxNumber?: string;
     enterpriseName?: string;
-    canalPrefere?: CanalPrefere;
+    preferredChannel?: CanalPrefere;
     typeEntreprise?: TypeEntreprise;
     active: boolean;
     createdAt: Date;
@@ -212,8 +212,8 @@ export interface TierBase {
 export interface TiersClient extends TierBase {
     type: 'client';
     segment?: SegmentClient;
-    plafondCredit?: number;
-    canalAquisition?: CanalAquisition;
+    creditLimit?: number;
+    acquisitionChannel?: CanalAquisition;
     fax?: string;
     contact?: string;
     formeJuridique?: string;
@@ -252,14 +252,14 @@ export interface TiersClient extends TierBase {
     categorie?: 'A' | 'B' | 'C';
     siret?: string;
     tva?: string;
-    estAssujettiTVA?: boolean;
+    vatSubject?: boolean;
 }
 
 export interface TiersFournisseur extends TierBase {
     type: 'fournisseur';
-    modePaiement?: ModePaiementFournisseur;
-    delaiLivraison?: string;
-    produitsPrincipaux?: ProduitPrincipal;
+    paymentMode?: ModePaiementFournisseur;
+    deliveryLeadTime?: string;
+    mainProductType?: ProduitPrincipal;
     certification?: string;
     fax?: string;
     contact?: string;
@@ -297,12 +297,12 @@ export interface CommissionFacture {
 
 export interface TiersCommercial extends TierBase {
     type: 'commercial';
-    typeCommercial?: TypeCommercial;
+    agentType?: TypeCommercial;
     commission?: number;
-    dateDebutContrat?: Date;
-    dateFinContrat?: Date;
-    zonesCouvertes?: ZoneCouverture;
-    specialisations?: Specialisation;
+    contractStartDate?: Date;
+    contractEndDate?: Date;
+    coveredZones?: ZoneCouverture;
+    specializations?: Specialisation;
     fax?: string;
     contact?: string;
     notes?: string;
@@ -315,15 +315,14 @@ export interface TiersCommercial extends TierBase {
 
 export interface TiersProspect extends TierBase {
     type: 'prospect';
-    sourceProspect?: SourceProspect;
-    potentiel?: Potentiel;
-    dateConversion?: Date;
-    probabilite?: number;
-    notesProspect?: string;
+    source?: SourceProspect;
+    potential?: Potentiel;
+    conversionDate?: Date;
+    probability?: number;
+    notes?: string;
     fax?: string;
     contact?: string;
     familleProspect?: string;
-    notes?: string;
     downgradeInfo?: {             // Rétrogradation depuis client
         motif: string;
         date: Date;

@@ -1,6 +1,7 @@
 export type CommercialDTO = {
     readonly id?: string;
-    readonly compteComptable?: string;
+    readonly accountingAccount?: string;
+    bankAccountNumber?: string;
     code?: string;
     name: string;
     shortName?: string;
@@ -14,23 +15,23 @@ export type CommercialDTO = {
     complement?: string;
     postalCode?: string;
     city?: string;
-    pays?: string;
-    secteurActivite?: string;
-    tailleEntreprise?: string;
+    country?: string;
+    businessSector?: string;
+    companySize?: string;
     dateCreation?: string;
-    registreCommerce?: string;
-    numeroFiscal?: string;
-    canalPrefere?: string;
+    tradeRegistryNumber?: string;
+    taxNumber?: string;
+    preferredChannel?: string;
     typeEntreprise?: string;
     tenantId?: string;
     agencyId?: string;
     typePersonnelOhada?: CommercialDTO.typePersonnelOhada;
-    typeCommercial?: CommercialDTO.typeCommercial;
+    agentType?: CommercialDTO.agentType;
     commission?: number;
-    dateDebutContrat?: string;
-    dateFinContrat?: string;
-    zonesCouvertes?: string;
-    specialisations?: string;
+    contractStartDate?: string;
+    contractEndDate?: string;
+    coveredZones?: string;
+    specializations?: string;
 };
 export namespace CommercialDTO {
     export enum typePersonnelOhada {
@@ -39,7 +40,7 @@ export namespace CommercialDTO {
         ETAT = 'ETAT',
         DIVERS = 'DIVERS',
     }
-    export enum typeCommercial {
+    export enum agentType {
         INTERNE = 'INTERNE',
         EXTERNE = 'EXTERNE',
         INDEPENDANT = 'INDEPENDANT',

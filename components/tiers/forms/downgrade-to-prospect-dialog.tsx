@@ -16,8 +16,8 @@ import { useRouter } from "next/navigation"
 
 const schema = z.object({
     motif: z.string().min(5, "Le motif est requis (5 car. min)"),
-    potentiel: z.enum(['FAIBLE', 'MOYEN', 'ELEVE', 'STRATEGIQUE']),
-    probabilite: z.number().min(0).max(100),
+    potential: z.enum(['FAIBLE', 'MOYEN', 'ELEVE', 'STRATEGIQUE']),
+    probability: z.number().min(0).max(100),
 })
 
 type FormValues = z.infer<typeof schema>
@@ -35,8 +35,8 @@ export function DowngradeToProspectDialog({ client }: Props) {
         resolver: zodResolver(schema),
         defaultValues: {
             motif: "",
-            potentiel: "FAIBLE",
-            probabilite: 20,
+            potential: "FAIBLE",
+            probability: 20,
         },
     })
 
@@ -57,17 +57,15 @@ export function DowngradeToProspectDialog({ client }: Props) {
                 pays: client.pays,
                 website: client.website,
                 complement: client.complement,
-                registreCommerce: client.registreCommerce,
-                numeroFiscal: client.numeroFiscal,
+                tradeRegistryNumber: client.tradeRegistryNumber,
+                taxNumber: client.taxNumber,
                 nui: client.nui,
-                formeJuridique: client.formeJuridique,
                 description: client.description,
                 active: true,
-                potentiel: values.potentiel,
-                probabilite: values.probabilite,
-                sourceProspect: "RECOMMANDATION",
+                potential: values.potential,
+                probability: values.probability,
+                source: "RECOMMANDATION",
                 notes: `Anciennement client. Motif de rétrogradation : ${values.motif}`,
-                notesProspect: values.motif,
                 downgradeInfo: {
                     motif: values.motif,
                     date: new Date(),
@@ -137,7 +135,7 @@ export function DowngradeToProspectDialog({ client }: Props) {
                         )} />
 
                         <div className="grid grid-cols-2 gap-4">
-                            <FormField control={form.control} name="potentiel" render={({ field }) => (
+                            <FormField control={form.control} name="potential" render={({ field }) => (
                                 <FormItem>
                                     <FormLabel>Potentiel Prospect</FormLabel>
                                     <Select onValueChange={field.onChange} value={field.value}>
@@ -152,7 +150,7 @@ export function DowngradeToProspectDialog({ client }: Props) {
                                 </FormItem>
                             )} />
 
-                            <FormField control={form.control} name="probabilite" render={({ field }) => (
+                            <FormField control={form.control} name="probability" render={({ field }) => (
                                 <FormItem>
                                     <FormLabel>Probabilité de retour (%)</FormLabel>
                                     <FormControl>

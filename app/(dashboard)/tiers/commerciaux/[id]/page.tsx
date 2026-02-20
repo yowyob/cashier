@@ -87,9 +87,9 @@ export default function CommercialDetailPage() {
                             <Badge className={commercial.active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}>
                                 {commercial.active ? 'Actif' : 'Inactif'}
                             </Badge>
-                            {commercial.typeCommercial && <Badge className={typeCommercialColors[commercial.typeCommercial]}>{commercial.typeCommercial}</Badge>}
+                            {commercial.agentType && <Badge className={typeCommercialColors[commercial.agentType]}>{commercial.agentType}</Badge>}
                         </div>
-                        <p className="text-sm text-gray-500">{commercial.matricule} · {commercial.city} · Zone : {commercial.zonesCouvertes}</p>
+                        <p className="text-sm text-gray-500">{commercial.matricule} · {commercial.city} · Zone : {commercial.coveredZones}</p>
                     </div>
                 </div>
                 <div className="flex gap-2">
@@ -102,7 +102,7 @@ export default function CommercialDetailPage() {
 
             {/* Alerts */}
             <div className="flex flex-wrap gap-2">
-                {!commercial.compteComptable && (
+                {!commercial.accountingAccount && (
                     <div className="flex items-center gap-2 rounded-lg border border-orange-200 bg-orange-50 px-3 py-2 text-sm text-orange-700">
                         <span className="font-medium">⚠ Compte comptable non assigné</span>
                         <AssignCompteDialog tier={commercial} type="comptable" />
@@ -153,10 +153,10 @@ export default function CommercialDetailPage() {
                         </div>
                         <hr className="border-gray-100" />
                         <div className="space-y-1.5 text-xs text-gray-500">
-                            {commercial.compteComptable && <div className="flex justify-between"><span>Compte comptable</span><span className="font-mono font-bold text-gray-700">{commercial.compteComptable}</span></div>}
-                            {commercial.dateDebutContrat && <div className="flex justify-between"><span>Début contrat</span><span>{format(new Date(commercial.dateDebutContrat), 'dd/MM/yyyy')}</span></div>}
-                            {commercial.dateFinContrat && <div className="flex justify-between"><span>Fin contrat</span><span>{format(new Date(commercial.dateFinContrat), 'dd/MM/yyyy')}</span></div>}
-                            {commercial.zonesCouvertes && <div className="flex justify-between"><span>Zone</span><Badge className="bg-green-100 text-green-800 text-[10px]">{commercial.zonesCouvertes}</Badge></div>}
+                            {commercial.accountingAccount && <div className="flex justify-between"><span>Compte comptable</span><span className="font-mono font-bold text-gray-700">{commercial.accountingAccount}</span></div>}
+                            {commercial.contractStartDate && <div className="flex justify-between"><span>Début contrat</span><span>{format(new Date(commercial.contractStartDate), 'dd/MM/yyyy')}</span></div>}
+                            {commercial.contractEndDate && <div className="flex justify-between"><span>Fin contrat</span><span>{format(new Date(commercial.contractEndDate), 'dd/MM/yyyy')}</span></div>}
+                            {commercial.coveredZones && <div className="flex justify-between"><span>Zone</span><Badge className="bg-green-100 text-green-800 text-[10px]">{commercial.coveredZones}</Badge></div>}
                         </div>
                     </div>
 

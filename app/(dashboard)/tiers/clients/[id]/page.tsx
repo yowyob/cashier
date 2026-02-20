@@ -98,7 +98,7 @@ export default function ClientDetailPage() {
 
             {/* Alerts for missing data */}
             <div className="flex flex-wrap gap-2">
-                {!client.compteComptable && (
+                {!client.accountingAccount && (
                     <div className="flex items-center gap-2 rounded-lg border border-orange-200 bg-orange-50 px-3 py-2 text-sm text-orange-700">
                         <span className="font-medium">⚠ Compte comptable non assigné</span>
                         <AssignCompteDialog tier={client} type="comptable" />
@@ -127,19 +127,19 @@ export default function ClientDetailPage() {
                         </div>
                         <hr className="border-gray-100" />
                         <div className="space-y-2 text-xs text-gray-500">
-                            {client.compteComptable && (
+                            {client.accountingAccount && (
                                 <div className="flex justify-between">
                                     <span>Compte Comptable</span>
-                                    <span className="font-mono font-bold text-green-700">{client.compteComptable}</span>
+                                    <span className="font-mono font-bold text-green-700">{client.accountingAccount}</span>
                                 </div>
                             )}
                             {client.segment && <div className="flex justify-between"><span>Segment</span><Badge className="bg-blue-100 text-blue-800 text-[10px]">{client.segment}</Badge></div>}
                             {client.formeJuridique && <div className="flex justify-between"><span>Forme Juridique</span><span className="font-medium text-gray-700">{client.formeJuridique}</span></div>}
-                            {client.registreCommerce && <div className="flex justify-between"><span>RC</span><span className="font-medium text-gray-700 text-right">{client.registreCommerce}</span></div>}
-                            {client.numeroFiscal && <div className="flex justify-between"><span>N° Fiscal</span><span className="font-medium text-gray-700">{client.numeroFiscal}</span></div>}
-                            {client.plafondCredit !== undefined && <div className="flex justify-between"><span>Plafond Crédit</span><span className="font-medium text-gray-700">{client.plafondCredit.toLocaleString('fr-FR')} XAF</span></div>}
+                            {client.tradeRegistryNumber && <div className="flex justify-between"><span>RC</span><span className="font-medium text-gray-700 text-right">{client.tradeRegistryNumber}</span></div>}
+                            {client.taxNumber && <div className="flex justify-between"><span>N° Fiscal</span><span className="font-medium text-gray-700">{client.taxNumber}</span></div>}
+                            {client.creditLimit !== undefined && <div className="flex justify-between"><span>Plafond Crédit</span><span className="font-medium text-gray-700">{client.creditLimit.toLocaleString('fr-FR')} XAF</span></div>}
                             {client.financial?.solde !== undefined && <div className="flex justify-between"><span>Solde</span><span className={`font-medium ${client.financial.solde < 0 ? 'text-red-600' : 'text-gray-700'}`}>{client.financial.solde.toLocaleString('fr-FR')} XAF</span></div>}
-                            <div className="flex justify-between"><span>TVA</span><span className="font-medium text-gray-700">{client.estAssujettiTVA ? 'Assujetti' : 'Non assujetti'}</span></div>
+                            <div className="flex justify-between"><span>TVA</span><span className="font-medium text-gray-700">{client.vatSubject ? 'Assujetti' : 'Non assujetti'}</span></div>
                         </div>
                     </div>
 

@@ -1,6 +1,7 @@
 export type ProspectDTO = {
     readonly id?: string;
-    readonly compteComptable?: string;
+    readonly accountingAccount?: string;
+    bankAccountNumber?: string;
     code?: string;
     name: string;
     shortName?: string;
@@ -14,22 +15,22 @@ export type ProspectDTO = {
     complement?: string;
     postalCode?: string;
     city?: string;
-    pays?: string;
-    secteurActivite?: string;
-    tailleEntreprise?: string;
+    country?: string;
+    businessSector?: string;
+    companySize?: string;
     dateCreation?: string;
-    registreCommerce?: string;
-    numeroFiscal?: string;
-    canalPrefere?: string;
+    tradeRegistryNumber?: string;
+    taxNumber?: string;
+    preferredChannel?: string;
     typeEntreprise?: string;
     tenantId?: string;
     agencyId?: string;
     typeProspectOhada?: ProspectDTO.typeProspectOhada;
-    sourceProspect?: string;
-    potentiel?: string;
-    dateConversion?: string;
-    probabilite?: number;
-    notesProspect?: string;
+    source?: string;
+    potential?: string;
+    conversionDate?: string;
+    probability?: number;
+    notes?: string;
 };
 export namespace ProspectDTO {
     export enum typeProspectOhada {

@@ -35,8 +35,8 @@ const baseSchema = z.object({
     code: z.string().optional(),
     typeEntreprise: z.enum(['PARTICULIER', 'ENTREPRISE', 'REVENDEUR']).optional(),
     formeJuridique: z.string().optional(),
-    secteurActivite: z.enum(['IT', 'FINANCE', 'SANTE', 'INDUSTRIE', 'COMMERCE']).optional(),
-    tailleEntreprise: z.enum(['MICRO', 'PME', 'ETI', 'GE']).optional(),
+    businessSector: z.enum(['IT', 'FINANCE', 'SANTE', 'INDUSTRIE', 'COMMERCE']).optional(),
+    companySize: z.enum(['MICRO', 'PME', 'ETI', 'GE']).optional(),
     dateCreation: z.string().optional(),
     // Contact
     email: z.string().email("Email invalide").optional().or(z.literal("")),
@@ -48,39 +48,38 @@ const baseSchema = z.object({
     postalCode: z.string().optional(),
     city: z.string().optional(),
     pays: z.enum(['CMR', 'CG', 'TC', 'GB', 'CI']).optional(),
-    canalPrefere: z.enum(['EMAIL', 'PHONE', 'COURRIER', 'IN_PERSON']).optional(),
+    preferredChannel: z.enum(['EMAIL', 'PHONE', 'COURRIER', 'IN_PERSON']).optional(),
     // Documents
-    registreCommerce: z.string().optional(),
-    numeroFiscal: z.string().optional(),
+    tradeRegistryNumber: z.string().optional(),
+    taxNumber: z.string().optional(),
     nui: z.string().optional(),
     siret: z.string().optional(),
     description: z.string().optional(),
     // Client-specific
     segment: z.enum(['PARTICULIER', 'ENTREPRISE', 'REVENDEUR']).optional(),
     familleClient: z.string().optional(),
-    plafondCredit: z.number().optional(),
-    canalAquisition: z.enum(['WEB', 'RESEAU', 'RECOMMANDATION']).optional(),
-    estAssujettiTVA: z.boolean().optional(),
+    creditLimit: z.number().optional(),
+    acquisitionChannel: z.enum(['WEB', 'RESEAU', 'RECOMMANDATION']).optional(),
+    vatSubject: z.boolean().optional(),
     // Fournisseur-specific
     familleFournisseur: z.string().optional(),
-    delaiLivraison: z.string().optional(),
+    deliveryLeadTime: z.string().optional(),
     conditionsPaiement: z.string().optional(),
     certification: z.string().optional(),
     // Commercial-specific
-    typeCommercial: z.enum(['INTERNE', 'EXTERNE', 'INDEPENDANT']).optional(),
+    agentType: z.enum(['INTERNE', 'EXTERNE', 'INDEPENDANT']).optional(),
     commission: z.number().optional(),
     matricule: z.string().optional(),
     // Prospect-specific
-    sourceProspect: z.enum(['SITE_WEB', 'RESEAU_SOCIAL', 'SALON', 'RECOMMANDATION']).optional(),
-    potentiel: z.enum(['FAIBLE', 'MOYEN', 'ELEVE', 'STRATEGIQUE']).optional(),
-    probabilite: z.number().min(0).max(100).optional(),
+    source: z.enum(['SITE_WEB', 'RESEAU_SOCIAL', 'SALON', 'RECOMMANDATION']).optional(),
+    potential: z.enum(['FAIBLE', 'MOYEN', 'ELEVE', 'STRATEGIQUE']).optional(),
+    probability: z.number().min(0).max(100).optional(),
     // Multi-select arrays (handled manually)
     modesPaiementClient: z.array(z.string()).optional(),
     categoriesVente: z.array(z.string()).optional(),
     modesPaiementFournisseur: z.array(z.string()).optional(),
     categoriesAchat: z.array(z.string()).optional(),
     notes: z.string().optional(),
-    notesProspect: z.string().optional(),
 })
 
 type FormValues = z.infer<typeof baseSchema>
@@ -106,7 +105,7 @@ export function CreateTierDialog({ type, label }: CreateTierDialogProps) {
             name: "", email: "", phoneNumber: "", address: "", city: "",
             modesPaiementClient: [], categoriesVente: [],
             modesPaiementFournisseur: [], categoriesAchat: [],
-            estAssujettiTVA: false,
+            vatSubject: false,
         },
     })
 
@@ -126,12 +125,12 @@ export function CreateTierDialog({ type, label }: CreateTierDialogProps) {
                     categoriesVente: (values.categoriesVente || []) as CategorieTransaction[],
                 }),
                 ...(type === 'fournisseur' && {
-                    modePaiement: 'VIREMENT' as const,
+                    paymentMode: 'VIREMENT' as const,
                     modesPaiementFournisseur: (values.modesPaiementFournisseur || []) as ModePaiementClient[],
                     categoriesAchat: (values.categoriesAchat || []) as CategorieTransaction[],
                 }),
-                ...(type === 'commercial' && { commission: values.commission || 5, typeCommercial: values.typeCommercial || 'INTERNE' as const }),
-                ...(type === 'prospect' && { potentiel: values.potentiel || 'MOYEN' as const }),
+                ...(type === 'commercial' && { commission: values.commission || 5, agentType: values.agentType || 'INTERNE' as const }),
+                ...(type === 'prospect' && { potential: values.potential || 'MOYEN' as const }),
             } as Tier
             await addTier(newTier)
             form.reset()
@@ -226,7 +225,7 @@ export function CreateTierDialog({ type, label }: CreateTierDialogProps) {
                                     )} />
                                 </div>
                                 <div className="grid grid-cols-2 gap-4">
-                                    <FormField control={form.control} name="secteurActivite" render={({ field }) => (
+                                    <FormField control={form.control} name="businessSector" render={({ field }) => (
                                         <FormItem>
                                             <FormLabel>Secteur d'Activité</FormLabel>
                                             <Select onValueChange={field.onChange} defaultValue={field.value}>
@@ -241,7 +240,7 @@ export function CreateTierDialog({ type, label }: CreateTierDialogProps) {
                                             </Select>
                                         </FormItem>
                                     )} />
-                                    <FormField control={form.control} name="tailleEntreprise" render={({ field }) => (
+                                    <FormField control={form.control} name="companySize" render={({ field }) => (
                                         <FormItem>
                                             <FormLabel>Taille Entreprise</FormLabel>
                                             <Select onValueChange={field.onChange} defaultValue={field.value}>
@@ -344,7 +343,7 @@ export function CreateTierDialog({ type, label }: CreateTierDialogProps) {
                                         </FormItem>
                                     )} />
                                 </div>
-                                <FormField control={form.control} name="canalPrefere" render={({ field }) => (
+                                <FormField control={form.control} name="preferredChannel" render={({ field }) => (
                                     <FormItem>
                                         <FormLabel>Canal de Communication Préféré</FormLabel>
                                         <Select onValueChange={field.onChange} defaultValue={field.value}>
@@ -387,13 +386,13 @@ export function CreateTierDialog({ type, label }: CreateTierDialogProps) {
                                             )} />
                                         </div>
                                         <div className="grid grid-cols-2 gap-4">
-                                            <FormField control={form.control} name="plafondCredit" render={({ field }) => (
+                                            <FormField control={form.control} name="creditLimit" render={({ field }) => (
                                                 <FormItem>
                                                     <FormLabel>Plafond Crédit (XAF)</FormLabel>
                                                     <FormControl><Input type="number" placeholder="500000" {...field} onChange={e => field.onChange(Number(e.target.value))} /></FormControl>
                                                 </FormItem>
                                             )} />
-                                            <FormField control={form.control} name="canalAquisition" render={({ field }) => (
+                                            <FormField control={form.control} name="acquisitionChannel" render={({ field }) => (
                                                 <FormItem>
                                                     <FormLabel>Canal d'Acquisition</FormLabel>
                                                     <Select onValueChange={field.onChange} defaultValue={field.value}>
@@ -433,7 +432,7 @@ export function CreateTierDialog({ type, label }: CreateTierDialogProps) {
                                                 </div>
                                             ))}
                                         </div>
-                                        <FormField control={form.control} name="estAssujettiTVA" render={({ field }) => (
+                                        <FormField control={form.control} name="vatSubject" render={({ field }) => (
                                             <FormItem className="flex items-center gap-3 rounded-md border p-3">
                                                 <FormControl>
                                                     <Switch checked={field.value} onCheckedChange={field.onChange} />
@@ -460,7 +459,7 @@ export function CreateTierDialog({ type, label }: CreateTierDialogProps) {
                                                     <FormControl><Input placeholder="Ex: Boissons, Alimentaire..." {...field} /></FormControl>
                                                 </FormItem>
                                             )} />
-                                            <FormField control={form.control} name="delaiLivraison" render={({ field }) => (
+                                            <FormField control={form.control} name="deliveryLeadTime" render={({ field }) => (
                                                 <FormItem>
                                                     <FormLabel>Délai de Livraison</FormLabel>
                                                     <FormControl><Input placeholder="Ex: 48h, 5 jours..." {...field} /></FormControl>
@@ -520,7 +519,7 @@ export function CreateTierDialog({ type, label }: CreateTierDialogProps) {
                                     <>
                                         <SectionTitle>Profil Commercial</SectionTitle>
                                         <div className="grid grid-cols-2 gap-4">
-                                            <FormField control={form.control} name="typeCommercial" render={({ field }) => (
+                                            <FormField control={form.control} name="agentType" render={({ field }) => (
                                                 <FormItem>
                                                     <FormLabel>Type Commercial</FormLabel>
                                                     <Select onValueChange={field.onChange} defaultValue={field.value}>
@@ -553,7 +552,7 @@ export function CreateTierDialog({ type, label }: CreateTierDialogProps) {
                                     <>
                                         <SectionTitle>Profil Prospect</SectionTitle>
                                         <div className="grid grid-cols-2 gap-4">
-                                            <FormField control={form.control} name="sourceProspect" render={({ field }) => (
+                                            <FormField control={form.control} name="source" render={({ field }) => (
                                                 <FormItem>
                                                     <FormLabel>Source</FormLabel>
                                                     <Select onValueChange={field.onChange} defaultValue={field.value}>
@@ -567,7 +566,7 @@ export function CreateTierDialog({ type, label }: CreateTierDialogProps) {
                                                     </Select>
                                                 </FormItem>
                                             )} />
-                                            <FormField control={form.control} name="potentiel" render={({ field }) => (
+                                            <FormField control={form.control} name="potential" render={({ field }) => (
                                                 <FormItem>
                                                     <FormLabel>Potentiel</FormLabel>
                                                     <Select onValueChange={field.onChange} defaultValue={field.value}>
@@ -582,13 +581,13 @@ export function CreateTierDialog({ type, label }: CreateTierDialogProps) {
                                                 </FormItem>
                                             )} />
                                         </div>
-                                        <FormField control={form.control} name="probabilite" render={({ field }) => (
+                                        <FormField control={form.control} name="probability" render={({ field }) => (
                                             <FormItem>
                                                 <FormLabel>Probabilité de conversion (%)</FormLabel>
                                                 <FormControl><Input type="number" placeholder="50" min={0} max={100} {...field} onChange={e => field.onChange(Number(e.target.value))} /></FormControl>
                                             </FormItem>
                                         )} />
-                                        <FormField control={form.control} name="notesProspect" render={({ field }) => (
+                                        <FormField control={form.control} name="notes" render={({ field }) => (
                                             <FormItem>
                                                 <FormLabel>Notes prospect</FormLabel>
                                                 <FormControl><Textarea placeholder="Notes de suivi..." rows={3} {...field} /></FormControl>
@@ -602,13 +601,13 @@ export function CreateTierDialog({ type, label }: CreateTierDialogProps) {
                             <TabsContent value="documents" className="space-y-4 pt-4">
                                 <SectionTitle>Identification Fiscale & Légale</SectionTitle>
                                 <div className="grid grid-cols-2 gap-4">
-                                    <FormField control={form.control} name="registreCommerce" render={({ field }) => (
+                                    <FormField control={form.control} name="tradeRegistryNumber" render={({ field }) => (
                                         <FormItem>
                                             <FormLabel>N° Registre de Commerce</FormLabel>
                                             <FormControl><Input placeholder="RC/DLA/2020/B/1234" {...field} /></FormControl>
                                         </FormItem>
                                     )} />
-                                    <FormField control={form.control} name="numeroFiscal" render={({ field }) => (
+                                    <FormField control={form.control} name="taxNumber" render={({ field }) => (
                                         <FormItem>
                                             <FormLabel>N° Fiscal</FormLabel>
                                             <FormControl><Input placeholder="M123456789A" {...field} /></FormControl>

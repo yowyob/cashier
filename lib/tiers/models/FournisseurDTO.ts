@@ -1,6 +1,7 @@
 export type FournisseurDTO = {
     readonly id?: string;
-    readonly compteComptable?: string;
+    readonly accountingAccount?: string;
+    bankAccountNumber?: string;
     code?: string;
     name: string;
     shortName?: string;
@@ -14,20 +15,20 @@ export type FournisseurDTO = {
     complement?: string;
     postalCode?: string;
     city?: string;
-    pays?: string;
-    secteurActivite?: string;
-    tailleEntreprise?: string;
+    country?: string;
+    businessSector?: string;
+    companySize?: string;
     dateCreation?: string;
-    registreCommerce?: string;
-    numeroFiscal?: string;
-    canalPrefere?: string;
+    tradeRegistryNumber?: string;
+    taxNumber?: string;
+    preferredChannel?: string;
     typeEntreprise?: string;
     tenantId?: string;
     agencyId?: string;
     typeFournisseurOhada?: FournisseurDTO.typeFournisseurOhada;
-    modePaiement?: FournisseurDTO.modePaiement;
-    delaiLivraison?: string;
-    produitsPrincipaux?: string;
+    paymentMode?: FournisseurDTO.paymentMode;
+    deliveryLeadTime?: string;
+    mainProductType?: string;
     certification?: string;
 };
 export namespace FournisseurDTO {
@@ -37,7 +38,7 @@ export namespace FournisseurDTO {
         IMMOBILISATIONS = 'IMMOBILISATIONS',
         DIVERS = 'DIVERS',
     }
-    export enum modePaiement {
+    export enum paymentMode {
         VIREMENT = 'VIREMENT',
         CHEQUE = 'CHEQUE',
         TRAITE = 'TRAITE',
