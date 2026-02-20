@@ -109,6 +109,70 @@ export const MOCK_CLIENTS: TiersClient[] = [
         ],
         createdAt: new Date(),
         updatedAt: new Date(),
+        bonsLivraison: [
+            {
+                idBonLivraison: "BL-001",
+                numeroBonLivraison: "BL-2024-001",
+                nomDestinataire: "ABBA ABAKAR",
+                adresseDestinataire: "Douala, Cameroun",
+                contactDestinataire: "691551643",
+                nomAgence: "Agence Principale",
+                adresseAgence: "Akwa",
+                contactAgence: "233445566",
+                dateLivraison: "2024-01-08",
+                dateEcheance: "2024-02-08",
+                lines: [
+                    { productId: "P1", description: "Bière Castel 65cl (crt)", quantity: 50, unitPrice: 4800, amount: 240000 }
+                ],
+                totalAmount: 240000,
+                termsAndConditions: "Paiement à la livraison",
+                purchaseOrderNumber: "PO-001",
+                createdAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString(),
+                idClient: "CLI000425",
+                nomClient: "ABBA ABAKAR",
+                statut: "LIVRE",
+                transporteur: "DHL",
+                numeroSuivi: "TRK-001",
+                organizationId: "ORG-1"
+            }
+        ],
+        devis: [
+            {
+                idDevis: "DEV-001",
+                numeroDevis: "DEV-2024-001",
+                dateCreation: "2024-05-10",
+                dateValidite: "2024-06-10",
+                type: "Standard",
+                statut: "ACCEPTE",
+                montantTotal: 141600,
+                idClient: "CLI000425",
+                nomClient: "ABBA ABAKAR",
+                lignesDevis: [
+                    { idLigne: "L1", quantite: 50, description: "Jus Tropico 1L", idProduit: "P2", nomProduit: "Jus Tropico 1L", prixUnitaire: 2400, montantTotal: 120000 }
+                ],
+                montantHT: 120000,
+                montantTVA: 21600,
+                montantTTC: 141600,
+                devise: "XAF",
+                finalAmount: 141600,
+                createdAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString()
+            }
+        ],
+        paiements: [
+            {
+                idPaiement: "PAY-001",
+                idClient: "CLI000425",
+                montant: 354000,
+                date: "2024-01-10",
+                journal: "Banque",
+                modePaiement: "VIREMENT",
+                idFacture: "FAC-001",
+                createdAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString()
+            }
+        ],
     },
     {
         id: "CLI000426",
@@ -257,6 +321,47 @@ export const MOCK_FOURNISSEURS: TiersFournisseur[] = [
         ],
         createdAt: new Date(),
         updatedAt: new Date(),
+        bonsAchat: [
+            {
+                idBonLivraison: "BA-001",
+                numeroBonLivraison: "BA-2024-101",
+                nomDestinataire: "Mon Entreprise",
+                adresseDestinataire: "Douala",
+                contactDestinataire: "Contact Achat",
+                nomAgence: "Agence",
+                adresseAgence: "Adresse",
+                contactAgence: "000",
+                dateLivraison: "2024-01-20",
+                dateEcheance: "2024-02-20",
+                lines: [
+                    { productId: "FP1", description: "Bière Castel", quantity: 300, unitPrice: 4200, amount: 1260000 }
+                ],
+                totalAmount: 1260000,
+                termsAndConditions: "Net 30j",
+                purchaseOrderNumber: "PO-100",
+                createdAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString(),
+                idClient: "FOU000100",
+                nomClient: "GROSSISTE KADJI",
+                statut: "RECU",
+                transporteur: "Interne",
+                numeroSuivi: "N/A",
+                organizationId: "ORG-1"
+            }
+        ],
+        paiements: [
+            {
+                idPaiement: "PAY-F01",
+                idClient: "FOU000100",
+                montant: 2360000,
+                date: "2024-02-15",
+                journal: "Banque",
+                modePaiement: "VIREMENT",
+                idFacture: "FFAC-001",
+                createdAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString()
+            }
+        ],
     },
     {
         id: "FOU000101",

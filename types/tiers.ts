@@ -99,6 +99,114 @@ export interface Facture {
     };
 }
 
+export interface BonLivraisonLigne {
+    productId: string;
+    description: string;
+    quantity: number;
+    unitPrice: number;
+    amount: number;
+}
+
+export interface BonLivraison {
+    idBonLivraison: string;
+    numeroBonLivraison: string;
+    nomDestinataire: string;
+    adresseDestinataire: string;
+    contactDestinataire: string;
+    nomAgence: string;
+    adresseAgence: string;
+    contactAgence: string;
+    dateLivraison: string;
+    dateEcheance: string;
+    lines: BonLivraisonLigne[];
+    totalAmount: number;
+    termsAndConditions: string;
+    purchaseOrderNumber: string;
+    createdAt: string;
+    updatedAt: string;
+    idClient: string;
+    nomClient: string;
+    statut: string;
+    transporteur?: string;
+    numeroSuivi?: string;
+    organizationId: string;
+}
+
+export interface DevisLigne {
+    idLigne: string;
+    quantite: number;
+    description: string;
+    debit?: number;
+    credit?: number;
+    isTaxLine?: boolean;
+    idProduit: string;
+    nomProduit: string;
+    prixUnitaire: number;
+    montantTotal: number;
+    remisePourcentage?: number;
+    remiseMontant?: number;
+}
+
+export interface Devis {
+    idDevis: string;
+    numeroDevis: string;
+    dateCreation: string;
+    dateValidite: string;
+    type: string;
+    statut: string;
+    montantTotal: number;
+    idClient: string;
+    nomClient: string;
+    adresseClient?: string;
+    emailClient?: string;
+    telephoneClient?: string;
+    lignesDevis: DevisLigne[];
+    montantHT: number;
+    montantTVA: number;
+    montantTTC: number;
+    devise: string;
+    tauxChange?: number;
+    conditionsPaiement?: string;
+    notes?: string;
+    referenceExterne?: string;
+    pdfPath?: string;
+    envoyeParEmail?: boolean;
+    dateEnvoiEmail?: string;
+    dateAcceptation?: string;
+    dateRefus?: string;
+    motifRefus?: string;
+    idFactureConvertie?: string;
+    remiseGlobalePourcentage?: number;
+    remiseGlobaleMontant?: number;
+    validiteOffreJours?: number;
+    applyVat?: boolean;
+    dateSysteme?: string;
+    modeReglement?: string;
+    nosRef?: string;
+    vosRef?: string;
+    nbreEcheance?: number;
+    referalClientId?: string;
+    finalAmount: number;
+    createdAt: string;
+    updatedAt: string;
+    organizationId?: string;
+    createdBy?: string;
+}
+
+export interface PaiementTiers {
+    idPaiement: string;
+    idClient: string; // also used for fournisseur
+    montant: number;
+    date: string;
+    journal: string;
+    modePaiement: string;
+    compteBancaireF?: string;
+    memo?: string;
+    idFacture?: string;
+    createdAt: string;
+    updatedAt: string;
+}
+
 export interface LigneProduit {
     id: string;
     reference: string;
@@ -231,6 +339,9 @@ export interface TiersClient extends TierBase {
     };
     notes?: string;
     factures?: Facture[];
+    bonsLivraison?: BonLivraison[];
+    devis?: Devis[];
+    paiements?: PaiementTiers[];
     produitsHistorique?: HistoriqueProduit[];
     communications?: Communication[];
     balanceStatusData?: {
@@ -266,6 +377,8 @@ export interface TiersFournisseur extends TierBase {
     formeJuridique?: string;
     familleFournisseur?: string;
     factures?: Facture[];
+    bonsAchat?: BonLivraison[]; // Using BonLivraison structure for bons d'achat
+    paiements?: PaiementTiers[];
     produitsHistorique?: HistoriqueProduit[];
     notes?: string;
     codeFournisseur?: string;

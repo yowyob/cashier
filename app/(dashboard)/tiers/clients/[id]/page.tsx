@@ -9,9 +9,9 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import {
     ArrowLeft, Mail, Phone, MapPin, Globe, Calendar, Building2,
     CheckCircle2, Clock, Ban, CreditCard, Package, FileText,
-    ShoppingCart, AlertCircle, Banknote, Tag
+    ShoppingCart, AlertCircle, Banknote, Tag, Truck, FileSpreadsheet
 } from "lucide-react"
-import { TiersClient, LABEL_MODE_PAIEMENT, LABEL_CATEGORIE_TRANSACTION } from "@/types/tiers"
+import { TiersClient, LABEL_MODE_PAIEMENT, LABEL_CATEGORIE_TRANSACTION, BonLivraison, Devis, PaiementTiers } from "@/types/tiers"
 import { format } from "date-fns"
 import { fr } from "date-fns/locale"
 import { AssignCompteDialog } from "@/components/tiers/assign-compte-dialog"
@@ -49,7 +49,7 @@ export default function ClientDetailPage() {
     const params = useParams()
     const router = useRouter()
     const { tiers, openScheduler, updateTier } = useTiersStore()
-    const [activeActionsTab, setActiveActionsTab] = useState<'actions' | 'factures' | 'produits'>('actions')
+    const [activeActionsTab, setActiveActionsTab] = useState<'actions' | 'factures' | 'produits' | 'bons_livraison' | 'devis' | 'paiements'>('actions')
 
     const client = tiers.find(t => t.id === params.id && t.type === 'client') as TiersClient | undefined
 
@@ -182,8 +182,11 @@ export default function ClientDetailPage() {
                     <div className="flex gap-1 border-b border-gray-200">
                         {([
                             { key: 'actions', label: `Actions (${(client.actions || []).length})`, icon: <Clock className="h-3.5 w-3.5" /> },
+                            { key: 'devis', label: `Devis (${(client.devis || []).length})`, icon: <FileSpreadsheet className="h-3.5 w-3.5" /> },
+                            { key: 'bons_livraison', label: `Bons Livr. (${(client.bonsLivraison || []).length})`, icon: <Truck className="h-3.5 w-3.5" /> },
                             { key: 'factures', label: `Factures (${(client.factures || []).length})`, icon: <FileText className="h-3.5 w-3.5" /> },
-                            { key: 'produits', label: `Produits`, icon: <Package className="h-3.5 w-3.5" /> },
+                            { key: 'paiements', label: `Paiements (${(client.paiements || []).length})`, icon: <Banknote className="h-3.5 w-3.5" /> },
+                            { key: 'produits', label: `Produits`, icon: <ShoppingCart className="h-3.5 w-3.5" /> },
                         ] as const).map(tab => (
                             <button
                                 key={tab.key}
@@ -296,6 +299,134 @@ export default function ClientDetailPage() {
                                                     </tr>
                                                 )
                                             })}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            )}
+                        </div>
+                    )}
+
+                    {/* Devis tab */}
+                    {activeActionsTab === 'devis' && (
+                        <div className="rounded-xl border border-gray-200 bg-white overflow-hidden">
+                            <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
+                                <h2 className="font-semibold text-gray-800 text-sm flex items-center gap-2">
+                                    <FileSpreadsheet className="h-4 w-4 text-blue-600" /> Devis
+                                </h2>
+                            </div>
+                            {(!client.devis || client.devis.length === 0) ? (
+                                <div className="text-center py-10">
+                                    <FileSpreadsheet className="h-10 w-10 text-gray-200 mx-auto mb-3" />
+                                    <p className="text-sm text-gray-400">Aucun devis enregistré</p>
+                                </div>
+                            ) : (
+                                <div className="overflow-x-auto">
+                                    <table className="w-full text-xs">
+                                        <thead className="bg-gray-50">
+                                            <tr>
+                                                {['N° Devis', 'Date Création', 'Validité', 'Statut', 'Montant TTC'].map(h => (
+                                                    <th key={h} className="px-4 py-3 text-left font-semibold text-gray-600">{h}</th>
+                                                ))}
+                                            </tr>
+                                        </thead>
+                                        <tbody className="divide-y divide-gray-50">
+                                            {client.devis.map(d => (
+                                                <tr key={d.idDevis} className="hover:bg-gray-50">
+                                                    <td className="px-4 py-3 font-mono text-gray-700 font-medium">{d.numeroDevis}</td>
+                                                    <td className="px-4 py-3 text-gray-600">{format(new Date(d.dateCreation), 'dd/MM/yyyy')}</td>
+                                                    <td className="px-4 py-3 text-gray-600">{format(new Date(d.dateValidite), 'dd/MM/yyyy')}</td>
+                                                    <td className="px-4 py-3">
+                                                        <Badge className="bg-gray-100 text-gray-700 text-[10px]">{d.statut}</Badge>
+                                                    </td>
+                                                    <td className="px-4 py-3 font-semibold text-gray-800">{d.montantTTC.toLocaleString('fr-FR')} {d.devise}</td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            )}
+                        </div>
+                    )}
+
+                    {/* Bons de Livraison Tab */}
+                    {activeActionsTab === 'bons_livraison' && (
+                        <div className="rounded-xl border border-gray-200 bg-white overflow-hidden">
+                            <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
+                                <h2 className="font-semibold text-gray-800 text-sm flex items-center gap-2">
+                                    <Truck className="h-4 w-4 text-blue-600" /> Bons de Livraison
+                                </h2>
+                            </div>
+                            {(!client.bonsLivraison || client.bonsLivraison.length === 0) ? (
+                                <div className="text-center py-10">
+                                    <Truck className="h-10 w-10 text-gray-200 mx-auto mb-3" />
+                                    <p className="text-sm text-gray-400">Aucun bon de livraison enregistré</p>
+                                </div>
+                            ) : (
+                                <div className="overflow-x-auto">
+                                    <table className="w-full text-xs">
+                                        <thead className="bg-gray-50">
+                                            <tr>
+                                                {['N° Bon Livr.', 'Date', 'Destinataire', 'Transporteur', 'Statut', 'Montant Total'].map(h => (
+                                                    <th key={h} className="px-4 py-3 text-left font-semibold text-gray-600">{h}</th>
+                                                ))}
+                                            </tr>
+                                        </thead>
+                                        <tbody className="divide-y divide-gray-50">
+                                            {client.bonsLivraison.map((bl: BonLivraison) => (
+                                                <tr key={bl.idBonLivraison} className="hover:bg-gray-50">
+                                                    <td className="px-4 py-3 font-mono text-gray-700 font-medium">{bl.numeroBonLivraison}</td>
+                                                    <td className="px-4 py-3 text-gray-600">{format(new Date(bl.dateLivraison), 'dd/MM/yyyy')}</td>
+                                                    <td className="px-4 py-3 text-gray-600">{bl.nomDestinataire}</td>
+                                                    <td className="px-4 py-3 text-gray-600">{bl.transporteur || '-'}</td>
+                                                    <td className="px-4 py-3">
+                                                        <Badge className="bg-blue-50 text-blue-700 border-blue-200 text-[10px]">{bl.statut}</Badge>
+                                                    </td>
+                                                    <td className="px-4 py-3 font-semibold text-gray-800">{bl.totalAmount.toLocaleString('fr-FR')} {client.financial?.devise || 'XAF'}</td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            )}
+                        </div>
+                    )}
+
+                    {/* Paiements Tab */}
+                    {activeActionsTab === 'paiements' && (
+                        <div className="rounded-xl border border-gray-200 bg-white overflow-hidden">
+                            <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
+                                <h2 className="font-semibold text-gray-800 text-sm flex items-center gap-2">
+                                    <Banknote className="h-4 w-4 text-green-600" /> Paiements Réalisés
+                                </h2>
+                            </div>
+                            {(!client.paiements || client.paiements.length === 0) ? (
+                                <div className="text-center py-10">
+                                    <Banknote className="h-10 w-10 text-gray-200 mx-auto mb-3" />
+                                    <p className="text-sm text-gray-400">Aucun paiement enregistré</p>
+                                </div>
+                            ) : (
+                                <div className="overflow-x-auto">
+                                    <table className="w-full text-xs">
+                                        <thead className="bg-gray-50">
+                                            <tr>
+                                                {['Date', 'Mode', 'Journal', 'Réf Facture', 'Mémo', 'Montant'].map(h => (
+                                                    <th key={h} className="px-4 py-3 text-left font-semibold text-gray-600">{h}</th>
+                                                ))}
+                                            </tr>
+                                        </thead>
+                                        <tbody className="divide-y divide-gray-50">
+                                            {client.paiements.map((p: PaiementTiers) => (
+                                                <tr key={p.idPaiement} className="hover:bg-gray-50">
+                                                    <td className="px-4 py-3 text-gray-600 font-medium">{format(new Date(p.date), 'dd/MM/yyyy')}</td>
+                                                    <td className="px-4 py-3">
+                                                        <Badge variant="outline" className="text-[10px] bg-white">{p.modePaiement}</Badge>
+                                                    </td>
+                                                    <td className="px-4 py-3 text-gray-600">{p.journal}</td>
+                                                    <td className="px-4 py-3 font-mono text-gray-500">{p.idFacture || '-'}</td>
+                                                    <td className="px-4 py-3 text-gray-500 max-w-[150px] truncate" title={p.memo}>{p.memo || '-'}</td>
+                                                    <td className="px-4 py-3 font-semibold text-green-700">+{p.montant.toLocaleString('fr-FR')} XAF</td>
+                                                </tr>
+                                            ))}
                                         </tbody>
                                     </table>
                                 </div>

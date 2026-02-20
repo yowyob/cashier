@@ -149,7 +149,7 @@ export const useTiersStore = create<TiersStoreState>((set, get) => ({
             // Fallback: update locally
             const currentTier = get().tiers.find(t => t.id === id);
             if (currentTier) {
-                const updatedTier = { ...currentTier, ...updates, updatedAt: new Date() };
+                const updatedTier = { ...currentTier, ...updates, updatedAt: new Date() } as Tier;
                 set((state) => ({ tiers: state.tiers.map((t) => (t.id === id ? updatedTier : t)), isLoading: false, error: null }));
             } else {
                 set({ error: err.message || 'Error updating tier', isLoading: false });

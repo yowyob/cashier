@@ -9,9 +9,9 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import {
     ArrowLeft, Mail, Phone, MapPin, Globe, Calendar, Building2,
     CheckCircle2, Clock, Ban, Truck, FileText, Package, ShoppingCart,
-    CreditCard, Tag
+    CreditCard, Tag, Banknote
 } from "lucide-react"
-import { TiersFournisseur, LABEL_MODE_PAIEMENT, LABEL_CATEGORIE_TRANSACTION } from "@/types/tiers"
+import { TiersFournisseur, LABEL_MODE_PAIEMENT, LABEL_CATEGORIE_TRANSACTION, BonLivraison, PaiementTiers } from "@/types/tiers"
 import { format } from "date-fns"
 import { fr } from "date-fns/locale"
 import { AssignCompteDialog } from "@/components/tiers/assign-compte-dialog"
@@ -35,7 +35,7 @@ export default function FournisseurDetailPage() {
     const params = useParams()
     const router = useRouter()
     const { tiers, openScheduler, updateTier } = useTiersStore()
-    const [activeTab, setActiveTab] = useState<'actions' | 'factures' | 'produits'>('actions')
+    const [activeTab, setActiveTab] = useState<'actions' | 'factures' | 'produits' | 'bons_achat' | 'paiements'>('actions')
 
     const fournisseur = tiers.find(t => t.id === params.id && t.type === 'fournisseur') as TiersFournisseur | undefined
 
@@ -182,7 +182,9 @@ export default function FournisseurDetailPage() {
                     <div className="flex gap-1 border-b border-gray-200">
                         {([
                             { key: 'actions', label: `Actions (${(fournisseur.actions || []).length})`, icon: <Clock className="h-3.5 w-3.5" /> },
+                            { key: 'bons_achat', label: `Bons d'Achat (${(fournisseur.bonsAchat || []).length})`, icon: <Truck className="h-3.5 w-3.5" /> },
                             { key: 'factures', label: `Factures (${(fournisseur.factures || []).length})`, icon: <FileText className="h-3.5 w-3.5" /> },
+                            { key: 'paiements', label: `Paiements (${(fournisseur.paiements || []).length})`, icon: <Banknote className="h-3.5 w-3.5" /> },
                             { key: 'produits', label: `Produits`, icon: <Package className="h-3.5 w-3.5" /> },
                         ] as const).map(tab => (
                             <button
@@ -292,6 +294,92 @@ export default function FournisseurDetailPage() {
                                                     </tr>
                                                 )
                                             })}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            )}
+                        </div>
+                    )}
+
+                    {/* Bons d'Achat Tab */}
+                    {activeTab === 'bons_achat' && (
+                        <div className="rounded-xl border border-gray-200 bg-white overflow-hidden">
+                            <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
+                                <h2 className="font-semibold text-gray-800 text-sm flex items-center gap-2">
+                                    <Truck className="h-4 w-4 text-purple-600" /> Bons d'Achat
+                                </h2>
+                            </div>
+                            {(!fournisseur.bonsAchat || fournisseur.bonsAchat.length === 0) ? (
+                                <div className="text-center py-10">
+                                    <Truck className="h-10 w-10 text-gray-200 mx-auto mb-3" />
+                                    <p className="text-sm text-gray-400">Aucun bon d'achat enregistré</p>
+                                </div>
+                            ) : (
+                                <div className="overflow-x-auto">
+                                    <table className="w-full text-xs">
+                                        <thead className="bg-gray-50">
+                                            <tr>
+                                                {['N° Bon Achat', 'Date', 'Destinataire', 'Transporteur', 'Statut', 'Montant Total'].map(h => (
+                                                    <th key={h} className="px-4 py-3 text-left font-semibold text-gray-600">{h}</th>
+                                                ))}
+                                            </tr>
+                                        </thead>
+                                        <tbody className="divide-y divide-gray-50">
+                                            {fournisseur.bonsAchat.map((ba: BonLivraison) => (
+                                                <tr key={ba.idBonLivraison} className="hover:bg-gray-50">
+                                                    <td className="px-4 py-3 font-mono text-gray-700 font-medium">{ba.numeroBonLivraison}</td>
+                                                    <td className="px-4 py-3 text-gray-600">{format(new Date(ba.dateLivraison), 'dd/MM/yyyy')}</td>
+                                                    <td className="px-4 py-3 text-gray-600">{ba.nomDestinataire}</td>
+                                                    <td className="px-4 py-3 text-gray-600">{ba.transporteur || '-'}</td>
+                                                    <td className="px-4 py-3">
+                                                        <Badge className="bg-purple-50 text-purple-700 border-purple-200 text-[10px]">{ba.statut}</Badge>
+                                                    </td>
+                                                    <td className="px-4 py-3 font-semibold text-gray-800">{ba.totalAmount.toLocaleString('fr-FR')} {fournisseur.financial?.devise || 'XAF'}</td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            )}
+                        </div>
+                    )}
+
+                    {/* Paiements Tab */}
+                    {activeTab === 'paiements' && (
+                        <div className="rounded-xl border border-gray-200 bg-white overflow-hidden">
+                            <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
+                                <h2 className="font-semibold text-gray-800 text-sm flex items-center gap-2">
+                                    <Banknote className="h-4 w-4 text-green-600" /> Paiements Émis
+                                </h2>
+                            </div>
+                            {(!fournisseur.paiements || fournisseur.paiements.length === 0) ? (
+                                <div className="text-center py-10">
+                                    <Banknote className="h-10 w-10 text-gray-200 mx-auto mb-3" />
+                                    <p className="text-sm text-gray-400">Aucun paiement enregistré</p>
+                                </div>
+                            ) : (
+                                <div className="overflow-x-auto">
+                                    <table className="w-full text-xs">
+                                        <thead className="bg-gray-50">
+                                            <tr>
+                                                {['Date', 'Mode', 'Journal', 'Réf Facture', 'Mémo', 'Montant'].map(h => (
+                                                    <th key={h} className="px-4 py-3 text-left font-semibold text-gray-600">{h}</th>
+                                                ))}
+                                            </tr>
+                                        </thead>
+                                        <tbody className="divide-y divide-gray-50">
+                                            {fournisseur.paiements.map((p: PaiementTiers) => (
+                                                <tr key={p.idPaiement} className="hover:bg-gray-50">
+                                                    <td className="px-4 py-3 text-gray-600 font-medium">{format(new Date(p.date), 'dd/MM/yyyy')}</td>
+                                                    <td className="px-4 py-3">
+                                                        <Badge variant="outline" className="text-[10px] bg-white">{p.modePaiement}</Badge>
+                                                    </td>
+                                                    <td className="px-4 py-3 text-gray-600">{p.journal}</td>
+                                                    <td className="px-4 py-3 font-mono text-gray-500">{p.idFacture || '-'}</td>
+                                                    <td className="px-4 py-3 text-gray-500 max-w-[150px] truncate" title={p.memo}>{p.memo || '-'}</td>
+                                                    <td className="px-4 py-3 font-semibold text-red-600">-{p.montant.toLocaleString('fr-FR')} XAF</td>
+                                                </tr>
+                                            ))}
                                         </tbody>
                                     </table>
                                 </div>
