@@ -22,6 +22,9 @@ export class ClientsService {
     public static getAllClients(): CancelablePromise<Array<ClientDTO>> {
         return __request(OpenAPI, { method: 'GET', url: '/api/clients' });
     }
+    public static defineAccountingAccount(id: string, accountingAccount: string): CancelablePromise<ClientDTO> {
+        return __request(OpenAPI, { method: 'PATCH', url: '/api/clients/{id}/accounting-account', path: { 'id': id }, body: accountingAccount, mediaType: 'text/plain' });
+    }
     public static createClient(requestBody: ClientDTO): CancelablePromise<ClientDTO> {
         return __request(OpenAPI, { method: 'POST', url: '/api/clients', body: requestBody, mediaType: 'application/json', errors: { 400: `Données invalides`, 500: `Erreur interne du serveur` } });
     }

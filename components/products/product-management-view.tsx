@@ -7,13 +7,13 @@ import { ProductForm } from "./product-form";
 import { getProducts, createProduct, updateProduct, deleteProduct } from "@/lib/api";
 import { Skeleton } from "../ui/skeleton";
 
-const PricingInfoView = ({ product }: {product: Product}) => (
+const PricingInfoView = ({ product }: { product: Product }) => (
     <div className="p-6"><h3 className="text-lg font-semibold mb-4 text-gray-900">Informations Prix</h3><p className="text-gray-600">Détails des prix pour {product.name}</p></div>
 );
-const StockInfoView = ({ product }: {product: Product}) => (
+const StockInfoView = ({ product }: { product: Product }) => (
     <div className="p-6"><h3 className="text-lg font-semibold mb-4 text-gray-900">Informations Stock</h3><p className="text-gray-600">Détails du stock pour {product.name}</p></div>
 );
-const MovementHistoryView = ({ product }: {product: Product}) => (
+const MovementHistoryView = ({ product }: { product: Product }) => (
     <div className="p-6"><h3 className="text-lg font-semibold mb-4 text-gray-900">Historique Mouvements</h3><p className="text-gray-600">Historique des mouvements de stock pour {product.name}</p></div>
 );
 
@@ -41,7 +41,7 @@ export function ProductManagementView() {
         fetchAndSetProducts();
     }, []);
 
-    const filteredProducts = useMemo(() => 
+    const filteredProducts = useMemo(() =>
         products.filter(product =>
             product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
             product.code.toLowerCase().includes(searchTerm.toLowerCase())
@@ -53,7 +53,7 @@ export function ProductManagementView() {
         setIsCreating(false);
         setActiveView('profile');
     };
-    
+
     const handleAddNew = () => {
         setIsCreating(true);
         setSelectedProduct(null);
@@ -69,25 +69,25 @@ export function ProductManagementView() {
 
     const handleSaveProduct = async (data: Product) => {
         try {
-            if(data.id) {
+            if (data.id) {
                 await updateProduct(data.id, data);
             } else {
                 await createProduct(data);
             }
             await fetchAndSetProducts();
             setIsCreating(false);
-        } catch(error) {
+        } catch (error) {
             console.error("Failed to save product:", error);
         }
     };
 
     const handleDeleteProduct = async (id: string) => {
-        if(window.confirm("Êtes-vous sûr de vouloir supprimer cet article ?")) {
+        if (window.confirm("Êtes-vous sûr de vouloir supprimer cet article ?")) {
             try {
                 await deleteProduct(id);
                 await fetchAndSetProducts();
                 setSelectedProduct(null);
-            } catch(error) {
+            } catch (error) {
                 console.error("Failed to delete product:", error);
             }
         }
@@ -101,10 +101,10 @@ export function ProductManagementView() {
     ];
 
     const currentView = () => {
-        if (isCreating) return <ProductForm initialData={null} onSave={handleSaveProduct} onCancel={handleCancelAction} />;
+        if (isCreating) return <ProductForm initialData={null} onSave={handleSaveProduct} />;
         if (selectedProduct) {
-            switch(activeView) {
-                case 'profile': return <ProductForm initialData={selectedProduct} onSave={handleSaveProduct} onDelete={handleDeleteProduct} onCancel={handleCancelAction} />;
+            switch (activeView) {
+                case 'profile': return <ProductForm initialData={selectedProduct} onSave={handleSaveProduct} />;
                 case 'pricing': return <PricingInfoView product={selectedProduct} />;
                 case 'stock': return <StockInfoView product={selectedProduct} />;
                 case 'history': return <MovementHistoryView product={selectedProduct} />;
@@ -112,7 +112,7 @@ export function ProductManagementView() {
             }
         }
         return (
-             <div className="h-full flex items-center justify-center"><div className="text-center">
+            <div className="h-full flex items-center justify-center"><div className="text-center">
                 <ShoppingBasket className="mx-auto h-12 w-12 text-gray-400 mb-4" /><h3 className="text-lg font-medium text-gray-900 mb-2">Aucun article sélectionné</h3>
                 <p className="text-gray-600">Sélectionnez un article dans la liste pour voir ses détails</p>
             </div></div>
@@ -133,7 +133,7 @@ export function ProductManagementView() {
                         const isActive = activeView === item.id;
                         const isDisabled = !selectedProduct && !isCreating;
                         return (
-                            <button key={item.id} onClick={() => !isDisabled && setActiveView(item.id)} disabled={isDisabled} className={`w-full px-3 py-2.5 rounded-lg text-left flex items-center space-x-3 transition-colors mb-1 ${ isActive ? 'bg-blue-50 text-blue-700 border border-blue-200' : isDisabled ? 'text-gray-400 cursor-not-allowed' : 'text-gray-700 hover:bg-gray-100'}`}>
+                            <button key={item.id} onClick={() => !isDisabled && setActiveView(item.id)} disabled={isDisabled} className={`w-full px-3 py-2.5 rounded-lg text-left flex items-center space-x-3 transition-colors mb-1 ${isActive ? 'bg-blue-50 text-blue-700 border border-blue-200' : isDisabled ? 'text-gray-400 cursor-not-allowed' : 'text-gray-700 hover:bg-gray-100'}`}>
                                 <Icon size={18} /><span className="font-medium">{item.label}</span>
                             </button>
                         );
@@ -150,7 +150,7 @@ export function ProductManagementView() {
                 </div>
                 <div className="flex-1 overflow-y-auto">
                     {isLoading ? (
-                         <div className="p-4 space-y-3">{Array.from({ length: 10 }).map((_, i) => <Skeleton key={i} className="h-16 w-full" />)}</div>
+                        <div className="p-4 space-y-3">{Array.from({ length: 10 }).map((_, i) => <Skeleton key={i} className="h-16 w-full" />)}</div>
                     ) : (
                         filteredProducts.map((product) => (
                             <div key={product.id} onClick={() => handleSelectProduct(product)} className={`p-4 border-b border-gray-100 cursor-pointer transition-colors hover:bg-gray-50 ${selectedProduct?.id === product.id ? 'bg-blue-50 border-l-4 border-l-blue-500' : ''}`}>
@@ -165,7 +165,7 @@ export function ProductManagementView() {
                     )}
                 </div>
             </div>
-            
+
             <div className="flex-1 bg-white">
                 {currentView()}
             </div>

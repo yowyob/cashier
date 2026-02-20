@@ -16,6 +16,9 @@ export class CommerciauxService {
     public static getAllCommerciaux(): CancelablePromise<Array<CommercialDTO>> {
         return __request(OpenAPI, { method: 'GET', url: '/api/commerciaux' });
     }
+    public static defineAccountingAccount(id: string, accountingAccount: string): CancelablePromise<CommercialDTO> {
+        return __request(OpenAPI, { method: 'PATCH', url: '/api/commerciaux/{id}/accounting-account', path: { 'id': id }, body: accountingAccount, mediaType: 'text/plain' });
+    }
     public static createCommercial(requestBody: CommercialDTO): CancelablePromise<CommercialDTO> {
         return __request(OpenAPI, { method: 'POST', url: '/api/commerciaux', body: requestBody, mediaType: 'application/json' });
     }

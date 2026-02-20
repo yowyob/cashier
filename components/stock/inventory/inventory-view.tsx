@@ -55,7 +55,7 @@ export function InventoryView({ initialInventories, products, warehouses }: Inve
             console.error("Failed to create inventory", error);
         }
     };
-    
+
     const handleSaveInventoryItems = async (inventoryId: string, items: InventoryItem[]) => {
         try {
             const updated = await updateInventory(inventoryId, { items });
@@ -74,7 +74,7 @@ export function InventoryView({ initialInventories, products, warehouses }: Inve
             const stockUpdates = inventory.items
                 .filter(item => item.physicalQty !== null && item.physicalQty !== item.theoreticalQty)
                 .map(item => updateProduct(item.productId, { stock: item.physicalQty! }));
-            
+
             await Promise.all(stockUpdates);
             const validated = await updateInventory(inventory.id, { status: 'Validé' });
             setSelectedInventory(validated);
@@ -90,12 +90,12 @@ export function InventoryView({ initialInventories, products, warehouses }: Inve
             <Card className="w-1/3 flex flex-col">
                 <CardHeader className="flex flex-row items-center justify-between">
                     <CardTitle className='text-base'>Liste des Inventaires</CardTitle>
-                    <Button size="sm" onClick={() => setIsNewDialogOpen(true)}><Plus className="mr-2 h-4 w-4"/>Nouveau</Button>
+                    <Button size="sm" onClick={() => setIsNewDialogOpen(true)}><Plus className="mr-2 h-4 w-4" />Nouveau</Button>
                 </CardHeader>
                 <CardContent className="flex-grow overflow-y-auto p-2">
-                    <InventoryListPanel 
+                    <InventoryListPanel
                         inventories={inventories}
-                        selectedId={selectedInventory?.id}
+                        selectedId={selectedInventory?.id || null}
                         onSelect={setSelectedInventory}
                     />
                 </CardContent>
@@ -103,11 +103,13 @@ export function InventoryView({ initialInventories, products, warehouses }: Inve
 
             <div className="w-2/3">
                 {selectedInventory ? (
-                    <InventoryDetailView 
+                    <InventoryDetailView
                         key={selectedInventory.id}
                         inventory={selectedInventory}
                         onSave={handleSaveInventoryItems}
-                        onValidate={handleValidateInventory}
+                        onValidate={() => handleValidateInventory(selectedInventory)}
+                        onDelete={() => { }}
+                        onBack={() => setSelectedInventory(null)}
                     />
                 ) : (
                     <Card className="h-full flex items-center justify-center">
@@ -119,7 +121,7 @@ export function InventoryView({ initialInventories, products, warehouses }: Inve
                 )}
             </div>
 
-            <NewInventoryDialog 
+            <NewInventoryDialog
                 isOpen={isNewDialogOpen}
                 onClose={() => setIsNewDialogOpen(false)}
                 warehouses={warehouses}

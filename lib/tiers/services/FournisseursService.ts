@@ -16,6 +16,9 @@ export class FournisseursService {
     public static getAllFournisseurs(): CancelablePromise<Array<FournisseurDTO>> {
         return __request(OpenAPI, { method: 'GET', url: '/api/fournisseurs' });
     }
+    public static defineAccountingAccount(id: string, accountingAccount: string): CancelablePromise<FournisseurDTO> {
+        return __request(OpenAPI, { method: 'PATCH', url: '/api/fournisseurs/{id}/accounting-account', path: { 'id': id }, body: accountingAccount, mediaType: 'text/plain' });
+    }
     public static createFournisseur(requestBody: FournisseurDTO): CancelablePromise<FournisseurDTO> {
         return __request(OpenAPI, { method: 'POST', url: '/api/fournisseurs', body: requestBody, mediaType: 'application/json' });
     }

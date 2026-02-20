@@ -13,18 +13,20 @@ import { Switch } from '@/components/ui/switch';
 interface SupplierFormProps {
     initialData: Partial<Supplier> | null;
     onSave: (data: Supplier) => void;
+    onCancel?: () => void;
+    onDelete?: (id: string) => void;
 }
 
 export function SupplierForm({ initialData, onSave }: SupplierFormProps) {
     const form = useForm<Supplier>({
         defaultValues: { ...initialData, isActive: initialData?.isActive ?? true, balance: initialData?.balance ?? 0 },
     });
-    
+
     useEffect(() => {
         form.reset({ ...initialData, isActive: initialData?.isActive ?? true, balance: initialData?.balance ?? 0 });
     }, [initialData, form]);
-    
-     const onSubmit = (data: Supplier) => {
+
+    const onSubmit = (data: Supplier) => {
         onSave(data);
     };
 

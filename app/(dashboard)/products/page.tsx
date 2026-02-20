@@ -81,7 +81,7 @@ export default function ProductsPage() {
   const handleOpenCompose = () => {
     onOpen({
       title: "Nouvel Article",
-      content: <ProductForm onSave={handleSave} onCancel={onClose} initialData={null} />
+      content: <ProductForm onSave={handleSave} initialData={null} />
     });
   };
 

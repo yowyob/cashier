@@ -18,17 +18,17 @@ export function SecondarySidebar() {
   const { onOpen } = useCompose();
 
   const currentModuleData = modules[activeModule];
-  
+
   const handleCompose = () => {
-    switch(activeModule) {
+    switch (activeModule) {
       case 'ventes':
-        onOpen({ title: 'Nouveau Client', content: <CustomerForm initialData={null} onSave={() => {}} onCancel={() => {}} />});
+        onOpen({ title: 'Nouveau Client', content: <CustomerForm initialData={null} onSave={() => { }} onCancel={() => { }} /> });
         break;
       case 'stock':
-        onOpen({ title: 'Nouvel Article', content: <ProductForm initialData={null} onSave={() => {}} onCancel={() => {}} />});
+        onOpen({ title: 'Nouvel Article', content: <ProductForm initialData={null} onSave={() => { }} /> });
         break;
       case 'personnel':
-         console.log("Ouvrir dialogue nouvel utilisateur");
+        console.log("Ouvrir dialogue nouvel utilisateur");
         break;
       default:
         console.log("Aucune action 'Nouveau' pour ce module.");

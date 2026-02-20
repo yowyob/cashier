@@ -20,7 +20,7 @@ export function MobileSidebar() {
         <SheetHeader>
           <SheetTitle>Menu</SheetTitle>
           <SheetDescription>
-            <MainNav isCollapsed={false} />
+            <MainNav links={[]} />
           </SheetDescription>
         </SheetHeader>
       </SheetContent>

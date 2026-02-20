@@ -104,6 +104,61 @@ export const useTiersStore = create<TiersStoreState>((set, get) => ({
                     createdTier.type = 'prospect';
                     break;
             }
+
+            // Cross-API Orchestration: Create Accounting Account dynamically
+            if (createdTier && createdTier.id) {
+                try {
+                    // We assume ACCOUNTING_API_URL is already imported from lib/api or can be fetched via process.env.
+                    // But to avoid circular dependencies and since we don't have it directly in this file,
+                    // we'll fetch from the global standard URL if not provided.
+                    const accountingApiUrl = process.env.NEXT_PUBLIC_ACCOUNTING_API_URL || "http://localhost:8081/api";
+
+                    const payload = {
+                        name: createdTier.name,
+                        type: createdTier.type.toUpperCase(),
+                        notes: createdTier.notes || "",
+                        externalId: createdTier.id
+                    };
+
+                    const response = await fetch(`${accountingApiUrl}/accounts/third-party`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+
+                    if (response.ok) {
+                        const accountingData = await response.json();
+                        const newAccNumber = accountingData.accountNumber || accountingData.id;
+
+                        if (newAccNumber) {
+                            // Link the new accounting account to our Tier via the PATCH endpoints
+                            switch (tier.type) {
+                                case 'client':
+                                    createdTier = await ClientsService.defineAccountingAccount(createdTier.id, newAccNumber);
+                                    createdTier.type = 'client';
+                                    break;
+                                case 'fournisseur':
+                                    createdTier = await FournisseursService.defineAccountingAccount(createdTier.id, newAccNumber);
+                                    createdTier.type = 'fournisseur';
+                                    break;
+                                case 'commercial':
+                                    createdTier = await CommerciauxService.defineAccountingAccount(createdTier.id, newAccNumber);
+                                    createdTier.type = 'commercial';
+                                    break;
+                                case 'prospect':
+                                    createdTier = await ProspectsService.defineAccountingAccount(createdTier.id, newAccNumber);
+                                    createdTier.type = 'prospect';
+                                    break;
+                            }
+                        }
+                    } else {
+                        console.warn(`Failed to create accounting account for ${createdTier.name}. Status:`, response.status);
+                    }
+                } catch (accErr) {
+                    console.error("Error communicating with Accounting API:", accErr);
+                }
+            }
+
             if (tier.actions && createdTier) createdTier.actions = tier.actions;
             if (createdTier) set((state) => ({ tiers: [...state.tiers, createdTier], isLoading: false }));
         } catch (err: any) {

@@ -32,9 +32,9 @@ const getNextOrderNumber = () => `CMD-${new Date().getFullYear()}-${String(Math.
 export function NewOrderForm({ clients, products }: NewOrderFormProps) {
     const [selectedProductId, setSelectedProductId] = useState<string>("");
     const [quantity, setQuantity] = useState<number>(1);
-    
-    const clientOptions: ComboboxOption[] = clients.map(c => ({ value: c.id, label: `${c.code} - ${c.companyName}`}));
-    const productOptions: ComboboxOption[] = products.filter(p => p.isActive).map(p => ({ value: p.id, label: `${p.code} - ${p.name}`}));
+
+    const clientOptions: ComboboxOption[] = clients.map(c => ({ value: c.id, label: `${c.code} - ${c.companyName}` }));
+    const productOptions: ComboboxOption[] = products.filter(p => p.isActive).map(p => ({ value: p.id, label: `${p.code} - ${p.name}` }));
 
     const form = useForm<FormValues>({
         defaultValues: {
@@ -71,7 +71,7 @@ export function NewOrderForm({ clients, products }: NewOrderFormProps) {
     React.useEffect(() => {
         recalculateTotals();
     }, [watchedItems, recalculateTotals]);
-    
+
     const handleAddArticle = useCallback(() => {
         if (!selectedProductId || quantity <= 0) return;
         const product = products.find(p => p.id === selectedProductId);
@@ -82,9 +82,9 @@ export function NewOrderForm({ clients, products }: NewOrderFormProps) {
             code: product.code,
             name: product.name,
             quantity: quantity,
-            unitPrice: product.price,
+            unitPrice: product.salePrice,
             discount: 0,
-            total: quantity * product.price,
+            total: quantity * product.salePrice,
         };
 
         append(newItem);
@@ -136,7 +136,7 @@ export function NewOrderForm({ clients, products }: NewOrderFormProps) {
                     <Card className="flex-1">
                         <CardHeader><CardTitle className="text-base">Ajouter un Article</CardTitle></CardHeader>
                         <CardContent className="space-y-0 px-4">
-                            <FormItem><FormLabel>Article</FormLabel><Combobox options={productOptions} value={selectedProductId} onChange={setSelectedProductId} placeholder="Rechercher un article..." searchPlaceholder="Taper le nom ou le code..."/></FormItem>
+                            <FormItem><FormLabel>Article</FormLabel><Combobox options={productOptions} value={selectedProductId} onChange={setSelectedProductId} placeholder="Rechercher un article..." searchPlaceholder="Taper le nom ou le code..." /></FormItem>
                             <FormItem className="flex"><FormLabel>Quantité</FormLabel><Input type="number" value={quantity} onChange={e => setQuantity(Math.max(1, Number(e.target.value)))} min={1} /></FormItem>
                             <div className="flex justify-end pt-2">
                                 <Button type="button" onClick={handleAddArticle} disabled={!selectedProductId}><PlusCircle className="mr-2 h-4 w-4" />Ajouter</Button>
@@ -148,21 +148,21 @@ export function NewOrderForm({ clients, products }: NewOrderFormProps) {
                         <CardHeader><CardTitle className="text-base">Informations Commande</CardTitle></CardHeader>
                         <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4 px-4">
                             <FormField name="clientId" control={form.control} render={({ field }) => (<FormItem className="col-span-2"><FormLabel>Client*</FormLabel><Combobox options={clientOptions} value={field.value} onChange={field.onChange} placeholder="Sélectionner un client..." searchPlaceholder="Taper le nom ou le code..." /></FormItem>)} />
-                            <FormField name="salesperson" render={({ field }) => (<FormItem><FormLabel>Vendeur</FormLabel><FormControl><Select onValueChange={field.onChange} value={field.value}><SelectTrigger><SelectValue/></SelectTrigger><SelectContent><SelectItem value="Administrateur">Administrateur</SelectItem><SelectItem value="Vendeur 1">Vendeur 1</SelectItem><SelectItem value="Vendeur 2">Vendeur 2</SelectItem></SelectContent></Select></FormControl></FormItem>)} />
+                            <FormField name="salesperson" render={({ field }) => (<FormItem><FormLabel>Vendeur</FormLabel><FormControl><Select onValueChange={field.onChange} value={field.value}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="Administrateur">Administrateur</SelectItem><SelectItem value="Vendeur 1">Vendeur 1</SelectItem><SelectItem value="Vendeur 2">Vendeur 2</SelectItem></SelectContent></Select></FormControl></FormItem>)} />
                             <FormField name="orderDate" render={({ field }) => (<FormItem className="flex flex-col"><FormLabel>Date</FormLabel><Popover><PopoverTrigger asChild><FormControl><Button variant="outline" className="w-full text-left font-normal"><CalendarIcon className="mr-2 h-4 w-4" />{field.value ? format(field.value, "dd MMM yyyy") : <span>Choisir</span>}</Button></FormControl></PopoverTrigger><PopoverContent className="w-auto p-0"><Calendar mode="single" selected={field.value} onSelect={field.onChange} /></PopoverContent></Popover></FormItem>)} />
                         </CardContent>
                     </Card>
-                    
+
                     <div className="w-full lg:w-[280px] flex flex-col gap-4">
                         <Card>
-                             <CardHeader><CardTitle className="text-base">Options & Actions</CardTitle></CardHeader>
-                             <CardContent className="space-y-4 px-4">
+                            <CardHeader><CardTitle className="text-base">Options & Actions</CardTitle></CardHeader>
+                            <CardContent className="space-y-4 px-4">
                                 <FormField control={form.control} name="notes" render={({ field }) => (<FormItem><FormLabel>Notes</FormLabel><Input {...field} placeholder="Notes sur la commande..." /></FormItem>)} />
                                 <div className="flex justify-between gap-2 pt-2">
                                     <Button variant="outline" type="button" className="w-1/2" onClick={() => form.reset()}><Eraser className="mr-1 h-4 w-4" />Effacer</Button>
                                     <Button type="submit" className="w-1/2" disabled={form.formState.isSubmitting || watchedItems.length === 0}><Save className="mr-1 h-4 w-4" />{form.formState.isSubmitting ? '...' : 'Enreg.'}</Button>
                                 </div>
-                             </CardContent>
+                            </CardContent>
                         </Card>
                     </div>
                 </div>
@@ -170,7 +170,7 @@ export function NewOrderForm({ clients, products }: NewOrderFormProps) {
                 <Card className="flex-grow flex flex-col min-h-0">
                     <CardHeader><CardTitle className="text-base">Détail de la Commande ({fields.length} articles)</CardTitle></CardHeader>
                     <CardContent className="py-0 flex-grow overflow-y-auto px-4">
-                         <div className="grid grid-cols-2 md:grid-cols-4 gap-2 pt-0 pb-4">
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-2 pt-0 pb-4">
                             <StatCard title="Total HT" value={totalHT.toLocaleString()} />
                             <StatCard title="Remise" value="0" />
                             <StatCard title="TVA" value={totalTVA.toLocaleString()} />

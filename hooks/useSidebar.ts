@@ -11,3 +11,5 @@ export const useSidebar = create<SidebarState>((set) => ({
   toggle: () => set((state) => ({ isCollapsed: !state.isCollapsed })),
   setCollapsed: (isCollapsed) => set({ isCollapsed }),
 }));
+
+export const useSecondarySidebar = useSidebar;

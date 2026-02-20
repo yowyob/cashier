@@ -39,7 +39,7 @@ export default function SuppliersPage() {
                 await updateSupplier(data.id, data);
             }
             await fetchAndSetSuppliers();
-            if(!isNew) {
+            if (!isNew) {
                 handleBackToList();
             }
         } catch (error) {
@@ -62,7 +62,7 @@ export default function SuppliersPage() {
     const handleOpenCompose = () => {
         onOpen({
             title: "Nouveau Fournisseur",
-            content: <SupplierForm onSave={handleSave} onCancel={() => {}} initialData={null} />
+            content: <SupplierForm onSave={handleSave} initialData={null} />
         });
     };
 
@@ -74,9 +74,9 @@ export default function SuppliersPage() {
 
     if (selectedSupplierId && selectedSupplier) {
         return (
-            <SupplierDetailView 
-                supplier={selectedSupplier} 
-                onSave={handleSave} 
+            <SupplierDetailView
+                supplier={selectedSupplier}
+                onSave={handleSave}
                 onDelete={handleDelete}
                 onBack={handleBackToList}
             />
@@ -88,6 +88,8 @@ export default function SuppliersPage() {
             suppliers={suppliers}
             isLoading={isLoading}
             onSelectSupplier={setSelectedSupplierId}
+            onEditSupplier={setSelectedSupplierId}
+            onDeleteSupplier={(supplier) => handleDelete(supplier.id)}
             onAddNew={handleOpenCompose}
             onRefresh={fetchAndSetSuppliers}
         />

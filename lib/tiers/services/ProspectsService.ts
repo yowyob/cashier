@@ -16,6 +16,9 @@ export class ProspectsService {
     public static getAllProspects(): CancelablePromise<Array<ProspectDTO>> {
         return __request(OpenAPI, { method: 'GET', url: '/api/prospects' });
     }
+    public static defineAccountingAccount(id: string, accountingAccount: string): CancelablePromise<ProspectDTO> {
+        return __request(OpenAPI, { method: 'PATCH', url: '/api/prospects/{id}/accounting-account', path: { 'id': id }, body: accountingAccount, mediaType: 'text/plain' });
+    }
     public static createProspect(requestBody: ProspectDTO): CancelablePromise<ProspectDTO> {
         return __request(OpenAPI, { method: 'POST', url: '/api/prospects', body: requestBody, mediaType: 'application/json' });
     }

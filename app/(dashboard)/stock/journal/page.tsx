@@ -22,7 +22,7 @@ export default function StockJournalPage() {
     const [isLoading, setIsLoading] = useState(true);
     const [movements, setMovements] = useState<UnifiedMovement[]>([]);
     const [selectedMovementId, setSelectedMovementId] = useState<string | null>(null);
-    
+
     // Store original data for detail view
     const [rawData, setRawData] = useState<{
         stockMovements: StockMovement[],
@@ -46,7 +46,7 @@ export default function StockJournalPage() {
             console.log('transfers:', transfers);
             console.log('transformations', transformations);
 
-            setRawData({ stockMovements, transfers, transformations, warehouses, products });
+            setRawData({ stockMovements, warehouseTransfers: transfers, productTransformations: transformations, warehouses, products });
 
             const warehouseMap = new Map(warehouses.map(w => [w.id, w.name]));
 
@@ -63,17 +63,17 @@ export default function StockJournalPage() {
                 description: `De ${warehouseMap.get(t.sourceWarehouseId)} à ${warehouseMap.get(t.destinationWarehouseId)}`,
                 warehouseId: t.sourceWarehouseId, warehouseName: warehouseMap.get(t.sourceWarehouseId) || t.sourceWarehouseId
             }));
-            
+
             const mappedTransformations = transformations.map((t): UnifiedMovement => ({
                 id: `pt-${t.id}`, originalId: t.id, date: new Date(t.date),
                 type: 'Transformation', reference: t.reference,
                 description: t.description || `Transformation d'articles`,
                 warehouseId: t.warehouseId, warehouseName: warehouseMap.get(t.warehouseId) || t.warehouseId
             }));
-            
+
             const allMovements = [...mappedMovements, ...mappedTransfers, ...mappedTransformations]
                 .sort((a, b) => b.date.getTime() - a.date.getTime());
-            
+
             setMovements(allMovements);
 
         } catch (error) {
@@ -91,14 +91,14 @@ export default function StockJournalPage() {
         setSelectedMovementId(null);
     };
 
-    const selectedMovement = useMemo(() => 
+    const selectedMovement = useMemo(() =>
         movements.find(m => m.id === selectedMovementId),
         [movements, selectedMovementId]
     );
 
     if (selectedMovementId && selectedMovement) {
         return (
-            <JournalDetailView 
+            <JournalDetailView
                 movement={selectedMovement}
                 rawData={rawData}
                 onBack={handleBackToList}
@@ -117,7 +117,7 @@ export default function StockJournalPage() {
                 </p>
             </div>
             <div className="flex-grow min-h-0">
-                <StockJournalView 
+                <StockJournalView
                     movements={movements}
                     warehouses={rawData.warehouses}
                     isLoading={isLoading}

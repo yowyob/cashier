@@ -17,8 +17,8 @@ interface JournalDetailViewProps {
     movement: UnifiedMovement;
     rawData: {
         stockMovements: StockMovement[];
-        transferts: WarehouseTransfer[];
-        transformations: ProductTransformation[];
+        warehouseTransfers: WarehouseTransfer[];
+        productTransformations: ProductTransformation[];
         warehouses: Warehouse[];
         products: Product[];
     };
@@ -33,11 +33,11 @@ const DetailTable = ({ items, productMap }: { items: any[], productMap: Map<stri
 
     const columns: ColumnDef<any>[] = [
         { accessorKey: 'code', header: 'Code' },
-        { accessorKey: 'name', header: 'Article', cell: ({row}) => <div className="w-[300px] truncate">{row.original.name}</div>},
+        { accessorKey: 'name', header: 'Article', cell: ({ row }) => <div className="w-[300px] truncate">{row.original.name}</div> },
         { accessorKey: 'quantity', header: 'Quantité' },
         { accessorKey: 'costPrice', header: 'P.A. Unitaire', cell: ({ row }) => row.original.costPrice?.toLocaleString() },
     ];
-    
+
     return <DataTable columns={columns} data={detailedItems} />;
 };
 
@@ -61,7 +61,7 @@ export function JournalDetailView({ movement, rawData, onBack }: JournalDetailVi
                 );
 
             case 'Transfert':
-                const trans = rawData.transferts.find(t => t.id === movement.originalId);
+                const trans = rawData.warehouseTransfers.find(t => t.id === movement.originalId);
                 if (!trans) return <p>Détails non trouvés.</p>;
                 return (
                     <Card>
@@ -74,9 +74,9 @@ export function JournalDetailView({ movement, rawData, onBack }: JournalDetailVi
                         <CardContent><DetailTable items={trans.items} productMap={productMap} /></CardContent>
                     </Card>
                 );
-            
+
             case 'Transformation':
-                const transf = rawData.transformations.find(t => t.id === movement.originalId);
+                const transf = rawData.productTransformations.find(t => t.id === movement.originalId);
                 if (!transf) return <p>Détails non trouvés.</p>;
                 return (
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
@@ -104,16 +104,16 @@ export function JournalDetailView({ movement, rawData, onBack }: JournalDetailVi
                 <Button variant="ghost" size="icon"><Printer className="h-5 w-5" /></Button>
             </div>
             <div className="p-4 border-b">
-                 <h1 className="text-2xl font-semibold">{movement.reference}</h1>
-                 <div className="flex items-center gap-4 text-sm text-gray-500 mt-1">
+                <h1 className="text-2xl font-semibold">{movement.reference}</h1>
+                <div className="flex items-center gap-4 text-sm text-gray-500 mt-1">
                     <span>{format(movement.date, 'dd MMMM yyyy à HH:mm')}</span>
                     <Badge>{movement.type}</Badge>
                     <span>Magasin: <span className="font-medium">{movement.warehouseName}</span></span>
-                 </div>
+                </div>
             </div>
             <div className="flex-1 overflow-y-auto p-4 bg-gray-50/50">
                 {renderDetails()}
             </div>
-        </div> 
+        </div>
     );
 }

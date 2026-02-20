@@ -22,8 +22,8 @@ interface InvoiceDetailPanelProps {
 }
 
 export function InvoiceDetailPanel({ invoice, onPrint }: InvoiceDetailPanelProps) {
-  const paymentForm = useForm({ defaultValues: { date: new Date(), amount: invoice.balanceDue } });
-  const cancelForm = useForm();
+  const paymentForm = useForm<{ date: Date, amount: number, method: string }>({ defaultValues: { date: new Date(), amount: invoice.balanceDue, method: "Espèce" } });
+  const cancelForm = useForm<{ reason: string }>();
 
   const itemColumns: ColumnDef<OrderItem>[] = [
     { accessorKey: "code", header: "Code" },
@@ -53,10 +53,10 @@ export function InvoiceDetailPanel({ invoice, onPrint }: InvoiceDetailPanelProps
         </div>
       </CardHeader>
       <div className="flex-shrink-0 grid grid-cols-4 gap-2 px-4">
-            <StatCard title="Total HT" value={invoice.totalHT.toLocaleString()} />
-            <StatCard title="Total TVA" value={invoice.totalTVA.toLocaleString()} />
-            <StatCard title="Total TTC" value={invoice.totalTTC.toLocaleString()} />
-            <StatCard title="Solde Dû" value={invoice.balanceDue.toLocaleString()} variant={invoice.balanceDue > 0 ? "destructive" : "default"} />
+        <StatCard title="Total HT" value={invoice.totalHT.toLocaleString()} />
+        <StatCard title="Total TVA" value={invoice.totalTVA.toLocaleString()} />
+        <StatCard title="Total TTC" value={invoice.totalTTC.toLocaleString()} />
+        <StatCard title="Solde Dû" value={invoice.balanceDue.toLocaleString()} variant={invoice.balanceDue > 0 ? "destructive" : "default"} />
       </div>
       <Tabs defaultValue="details" className="flex-grow flex flex-col min-h-0">
         <TabsList className="mx-6 flex-shrink-0">
@@ -74,11 +74,11 @@ export function InvoiceDetailPanel({ invoice, onPrint }: InvoiceDetailPanelProps
         <TabsContent value="payment" className="flex-grow p-6 pt-4 flex flex-col gap-4 overflow-y-auto">
           <div className="flex-shrink-0 grid grid-cols-3 gap-4">
             <StatCard title="Total Facturé" value={invoice.totalTTC.toLocaleString()} />
-            <StatCard title="Déjà Payé" value={invoice.totalPaid.toLocaleString()} variant="success" />
+            <StatCard title="Déjà Payé" value={invoice.totalPaid.toLocaleString()} />
             <StatCard title="Solde Restant" value={invoice.balanceDue.toLocaleString()} variant="destructive" />
           </div>
           {invoice.payments.length > 0 && <div className="flex-shrink-0"><DataTable columns={paymentColumns} data={invoice.payments} /></div>}
-          <Separator className="flex-shrink-0"/>
+          <Separator className="flex-shrink-0" />
           <Form {...paymentForm}>
             <form className="flex-shrink-0 space-y-4">
               <CardTitle className="text-lg">Nouveau règlement</CardTitle>

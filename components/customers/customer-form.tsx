@@ -11,17 +11,19 @@ import React, { useEffect } from 'react';
 interface CustomerFormProps {
     initialData: Partial<Client> | null;
     onSave: (data: Client) => void;
+    onCancel?: () => void;
+    onDelete?: (id: string) => void;
 }
 
 export function CustomerForm({ initialData, onSave }: CustomerFormProps) {
     const form = useForm<Client>({
         defaultValues: initialData || { companyName: '', code: '', contactPerson: '', phone: '', email: '', isActive: true, isTaxable: true, balance: 0 },
     });
-    
+
     useEffect(() => {
         form.reset(initialData || { companyName: '', code: '', contactPerson: '', phone: '', email: '', isActive: true, isTaxable: true, balance: 0 });
     }, [initialData, form]);
-    
+
     const onSubmit = (data: Client) => {
         onSave(data);
     };
@@ -50,7 +52,7 @@ export function CustomerForm({ initialData, onSave }: CustomerFormProps) {
                     <FormField control={form.control} name="notes" render={({ field }) => (
                         <FormItem><FormLabel>Notes</FormLabel><FormControl><Textarea {...field} rows={3} /></FormControl></FormItem>
                     )} />
-                     <div className="flex items-center space-x-8 pt-4">
+                    <div className="flex items-center space-x-8 pt-4">
                         <FormField control={form.control} name="isTaxable" render={({ field }) => (
                             <FormItem className="flex items-center gap-2 space-y-0"><FormControl><Switch checked={field.value} onCheckedChange={field.onChange} /></FormControl><FormLabel>Assujeti à la TVA</FormLabel></FormItem>
                         )} />
