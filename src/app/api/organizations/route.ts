@@ -1,63 +1,52 @@
 import { NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
-import { prisma } from "@/lib/prisma";
+import { fetchBackend, readBackendJson } from "@/lib/backend";
 
 export async function GET() {
     try {
         const session = await getSession();
-        if (!session || session.user.role !== "admin" || session.user.roleType !== "superadmin") {
+        if (!session) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         }
 
-        const organizations = await prisma.organization.findMany({
-            orderBy: { create_on: "desc" },
-            include: {
-                creator: {
-                    select: {
-                        user_first_name: true,
-                        user_name: true
-                    }
-                }
-            }
-        });
-        return NextResponse.json(organizations);
+        const backendResponse = await fetchBackend("/organizations/my", { cache: "no-store" }, "gestion");
+        const body = await readBackendJson(backendResponse);
+        if (!backendResponse.ok) {
+            return NextResponse.json(
+                { error: body?.error || "Failed to load organizations." },
+                { status: backendResponse.status }
+            );
+        }
+
+        return NextResponse.json(Array.isArray(body) ? body : Array.isArray(body?.data) ? body.data : []);
     } catch (error: any) {
-        return NextResponse.json({ error: error.message }, { status: 500 });
+        return NextResponse.json({ error: error?.message || "Failed to load organizations." }, { status: 500 });
     }
 }
 
 export async function POST(request: Request) {
     try {
         const session = await getSession();
-        if (!session || session.user.role !== "admin" || session.user.roleType !== "superadmin") {
+        if (!session) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         }
 
-        const body = await request.json();
-        if (!body.name) {
-            return NextResponse.json({ error: "Organization name is required" }, { status: 400 });
+        const contentType = request.headers.get("content-type") || "application/json";
+        const bodyText = await request.text();
+        const backendResponse = await fetchBackend("/organizations", {
+            method: "POST",
+            headers: { "Content-Type": contentType },
+            body: bodyText
+        }, "gestion");
+        const body = await readBackendJson(backendResponse);
+        if (!backendResponse.ok) {
+            return NextResponse.json(
+                { error: body?.error || "Failed to create organization." },
+                { status: backendResponse.status }
+            );
         }
-
-        const created = await prisma.organization.create({
-            data: {
-                name: body.name,
-                country: body.country || null,
-                description: body.description || null,
-                telegram_bot_token: body.telegram_bot_token || null,
-                is_active: body.is_active ?? true,
-                create_by: session.user.id || null
-            },
-            include: {
-                creator: {
-                    select: {
-                        user_first_name: true,
-                        user_name: true
-                    }
-                }
-            }
-        });
-        return NextResponse.json(created);
+        return NextResponse.json(body ?? {});
     } catch (error: any) {
-        return NextResponse.json({ error: error.message }, { status: 400 });
+        return NextResponse.json({ error: error?.message || "Failed to create organization." }, { status: 500 });
     }
 }

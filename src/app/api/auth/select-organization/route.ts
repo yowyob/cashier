@@ -59,14 +59,19 @@ export async function POST(request: Request) {
 
         if (expectsJson) {
             const body = await request.json();
-            organizationId = normalizeField(body?.organization_id);
-            organizationName = normalizeField(body?.organization_name);
-            agencyId = normalizeField(body?.agency_id);
-            agencyName = normalizeField(body?.agency_name);
-            roleName = normalizeField(body?.role_name);
-            accessToken = normalizeField(body?.access_token);
-            tokenType = normalizeField(body?.token_type);
-            expiresIn = typeof body?.expires_in === "number" ? body.expires_in : null;
+            organizationId = normalizeField(body?.organization_id ?? body?.organizationId);
+            organizationName = normalizeField(body?.organization_name ?? body?.organizationName);
+            agencyId = normalizeField(body?.agency_id ?? body?.agencyId);
+            agencyName = normalizeField(body?.agency_name ?? body?.agencyName);
+            roleName = normalizeField(body?.role_name ?? body?.roleName);
+            accessToken = normalizeField(body?.access_token ?? body?.accessToken);
+            tokenType = normalizeField(body?.token_type ?? body?.tokenType);
+            expiresIn =
+                typeof body?.expires_in === "number"
+                    ? body.expires_in
+                    : typeof body?.expiresIn === "number"
+                        ? body.expiresIn
+                        : null;
         } else {
             const formData = await request.formData();
             organizationId = normalizeField(formData.get("organization_id"));

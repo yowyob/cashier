@@ -30,8 +30,11 @@ type BackendLoginResponse = {
     success: boolean;
     user: BackendLoginUser;
     access_token?: string;
+    accessToken?: string;
     token_type?: string;
+    tokenType?: string;
     expires_in?: number;
+    expiresIn?: number;
     organizations?: BackendOrganization[];
 };
 
@@ -39,6 +42,18 @@ function normalizeField(value: unknown) {
     if (typeof value !== "string") return null;
     const trimmed = value.trim();
     return trimmed.length > 0 ? trimmed : null;
+}
+
+function resolveRole(user: BackendLoginUser) {
+    const roleType = (user.role_type || "").toLowerCase();
+    if (roleType === "superadmin") return { role: "admin", roleType: "superadmin" as const };
+    if (roleType === "organization_admin") return { role: "admin", roleType: "organization_admin" as const };
+    if (roleType === "agency_admin") return { role: "admin", roleType: "agency_admin" as const };
+    if (roleType === "salesperson") return { role: "cashier", roleType: null };
+    const role = (user.role || "").toLowerCase();
+    if (role === "admin") return { role: "admin", roleType: null };
+    if (role === "cashier") return { role: "cashier", roleType: null };
+    return { role: "user", roleType: null };
 }
 
 export async function POST(request: Request) {
@@ -92,21 +107,22 @@ export async function POST(request: Request) {
         }
 
         const expires = new Date(Date.now() + 24 * 60 * 60 * 1000);
+        const roleInfo = resolveRole(backendBody.user);
         const session = await encrypt({
             user: {
                 id: backendBody.user.id,
                 username: backendBody.user.username || email,
-                role: "user",
-                roleType: null,
-                agencyId: null,
-                organizationId: null,
+                role: roleInfo.role,
+                roleType: roleInfo.roleType,
+                agencyId: backendBody.user.agency_id ?? null,
+                organizationId: backendBody.user.organization_id ?? null,
                 bankingAccount: backendBody.user.banking_account ?? null,
                 accountingAccount: backendBody.user.accounting_account ?? null
             },
             backend: {
-                accessToken: backendBody.access_token || null,
-                tokenType: backendBody.token_type || "Bearer",
-                expiresIn: backendBody.expires_in || null
+                accessToken: backendBody.access_token || backendBody.accessToken || null,
+                tokenType: backendBody.token_type || backendBody.tokenType || "Bearer",
+                expiresIn: backendBody.expires_in || backendBody.expiresIn || null
             },
             expires
         });

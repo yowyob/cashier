@@ -3,7 +3,7 @@ import { fetchBackend, readBackendJson } from "@/lib/backend";
 
 export async function GET() {
     try {
-        const backendResponse = await fetchBackend("/api/organizations/current");
+        const backendResponse = await fetchBackend("/api/organizations/current", { cache: "no-store" }, "gestion");
         const body = await readBackendJson(backendResponse);
 
         if (!backendResponse.ok) {
@@ -13,7 +13,14 @@ export async function GET() {
             );
         }
 
-        return NextResponse.json(body);
+        const normalized =
+            Array.isArray(body)
+                ? body[0] || null
+                : Array.isArray(body?.data)
+                    ? body.data[0] || null
+                    : body;
+
+        return NextResponse.json(normalized ?? {});
     } catch (error: any) {
         return NextResponse.json({ error: error?.message || "Failed to load organization." }, { status: 500 });
     }

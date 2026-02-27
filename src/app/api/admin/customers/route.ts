@@ -1,49 +1,52 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/auth";
 import { fetchBackend, readBackendJson } from "@/lib/backend";
-import { hashPassword } from "@/lib/passwords";
-import { buildMockCustomerFromPhone } from "@/lib/customer-mock";
 
-function normalizePhone(value?: string | null) {
-    if (!value) return null;
+function normalizeString(value: unknown) {
+    if (typeof value !== "string") return null;
     const trimmed = value.trim();
-    return trimmed.length ? trimmed : null;
+    return trimmed.length > 0 ? trimmed : null;
 }
 
-function normalizeString(value?: string | null) {
-    if (!value) return null;
-    const trimmed = value.trim();
-    return trimmed.length ? trimmed : null;
+function normalizeCustomer(raw: any) {
+    const id = String(raw?.id ?? "");
+    const accountNumber = normalizeString(raw?.bank_account_number ?? raw?.accounting_account);
+
+    return {
+        id,
+        person: {
+            id,
+            user_first_name: raw?.name ?? raw?.short_name ?? "-",
+            user_name: raw?.short_name ?? raw?.name ?? "-",
+            phone: raw?.phone_number ?? null,
+            mail: raw?.email ?? null
+        },
+        phone: raw?.phone_number ?? null,
+        accounts: accountNumber
+            ? [{
+                id: `${id}:${accountNumber}`,
+                account_number: accountNumber,
+                total_funds: 0,
+                is_active: raw?.active ?? true
+            }]
+            : []
+    };
 }
 
-function buildDefaultUsername(phone?: string | null) {
-    if (!phone) return null;
-    const digits = phone.replace(/\D/g, "");
-    return digits ? `customer_${digits}` : null;
-}
-
-async function ensureUniqueUserName(candidate: string) {
-    let next = candidate;
-    let counter = 1;
-    while (await prisma.person.findUnique({ where: { user_name: next } })) {
-        next = `${candidate}_${counter}`;
-        counter += 1;
-    }
-    return next;
-}
-
-async function generateUniqueAccountNumber() {
-    let attempt = 0;
-    while (attempt < 10) {
-        const value = `ACC-${Math.floor(100000 + Math.random() * 900000)}`;
-        const existing = await prisma.account.findUnique({
-            where: { account_number: value }
-        });
-        if (!existing) return value;
-        attempt += 1;
-    }
-    throw new Error("Unable to generate unique account number.");
+function filterCustomers(customers: any[], query: string | null) {
+    if (!query) return customers;
+    const normalized = query.trim().toLowerCase();
+    if (!normalized) return customers;
+    return customers.filter((item) => {
+        const fields = [
+            item?.person?.user_first_name,
+            item?.person?.user_name,
+            item?.person?.phone,
+            item?.person?.mail,
+            ...(Array.isArray(item?.accounts) ? item.accounts.map((account: any) => account?.account_number) : [])
+        ];
+        return fields.some((value) => String(value || "").toLowerCase().includes(normalized));
+    });
 }
 
 export async function POST(request: Request) {
@@ -54,118 +57,49 @@ export async function POST(request: Request) {
         }
 
         const body = await request.json();
-        const phone = normalizePhone(body.phone);
-        const lookup = buildMockCustomerFromPhone(phone || "");
-        const userFirstName = normalizeString(body.user_first_name) || lookup?.user_first_name || null;
-        const mail = normalizeString(body.mail) || lookup?.mail || null;
-        const country = normalizeString(body.country) || lookup?.country || null;
-        const profession = normalizeString(body.profession) || lookup?.profession || null;
-        const accountNumber = normalizeString(body.account_number);
-        const initialBalance = Number(body.initial_balance || 0);
-        const providedUsername = normalizeString(body.user_name);
-        const userName = providedUsername || lookup?.user_name || buildDefaultUsername(phone);
+        const organizationId =
+            session.user.organizationId ||
+            body.organization_id ||
+            session.organization?.id ||
+            null;
+        if (!organizationId) {
+            return NextResponse.json({ error: "Missing organization scope." }, { status: 400 });
+        }
 
-        const missingFields = [
-            ["user_first_name", userFirstName],
-            ["phone", phone],
-            ["user_name", userName]
-        ]
-            .filter(([, value]) => !value)
-            .map(([field]) => field);
-        if (missingFields.length > 0) {
+        const payload = {
+            name: normalizeString(body.user_first_name) || normalizeString(body.user_name),
+            shortName: normalizeString(body.user_name) || normalizeString(body.user_first_name),
+            email: normalizeString(body.mail),
+            phoneNumber: normalizeString(body.phone),
+            country: normalizeString(body.country),
+            description: normalizeString(body.profession),
+            bankAccountNumber: normalizeString(body.account_number),
+            active: true
+        };
+
+        if (!payload.name) {
+            return NextResponse.json({ error: "user_first_name is required" }, { status: 400 });
+        }
+
+        const backendResponse = await fetchBackend("/api/v1/customers", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "X-Tenant-ID": organizationId
+            },
+            body: JSON.stringify(payload)
+        }, "gestion");
+        const raw = await readBackendJson(backendResponse);
+        if (!backendResponse.ok) {
             return NextResponse.json(
-                { error: `Missing required fields: ${missingFields.join(", ")}` },
-                { status: 400 }
+                { error: raw?.error || raw?.message || "Failed to create customer." },
+                { status: backendResponse.status }
             );
         }
-        if (Number.isNaN(initialBalance) || initialBalance < 0) {
-            return NextResponse.json({ error: "Initial balance must be a positive number." }, { status: 400 });
-        }
 
-        const existingPerson = await prisma.person.findFirst({
-            where: {
-                OR: [
-                    { user_name: userName },
-                    phone ? { phone } : undefined,
-                    mail ? { mail } : undefined
-                ].filter(Boolean) as any
-            }
-        });
-        if (existingPerson) {
-            return NextResponse.json({ error: "Customer already exists." }, { status: 400 });
-        }
-        let finalAccountNumber = accountNumber;
-        if (finalAccountNumber) {
-            const existingAccount = await prisma.account.findUnique({
-                where: { account_number: finalAccountNumber }
-            });
-            if (existingAccount) {
-                finalAccountNumber = null;
-            }
-        }
-        if (!finalAccountNumber) {
-            finalAccountNumber = await generateUniqueAccountNumber();
-        }
-
-        const finalUserName = await ensureUniqueUserName(userName!);
-
-        const hashedPassword = await hashPassword(body.password?.trim() || "password123");
-        const result = await prisma.$transaction(async (tx) => {
-            const person = await tx.person.create({
-                data: {
-                    user_name: finalUserName,
-                    user_first_name: userFirstName!,
-                    password: hashedPassword,
-                    phone,
-                    mail,
-                    country,
-                    customerProfile: {
-                        create: {
-                            profession,
-                            date_of_joining: new Date()
-                        }
-                    }
-                },
-                include: {
-                    customerProfile: true
-                }
-            });
-
-            const account = await tx.account.create({
-                data: {
-                    client_id: person.customerProfile!.id,
-                    account_number: finalAccountNumber,
-                    total_funds: initialBalance,
-                    is_active: true,
-                    create_by: session.user.id
-                }
-            });
-
-            return { person, account };
-        });
-
-        await AuditService.log({
-            type: "customer_admin_create",
-            authorId: session.user.id,
-            payload: {
-                message: "Customer account created",
-                subjectType: "customer",
-                subjectId: result.person.id,
-                agencyId: session.user.roleType === "agency_admin" ? session.user.agencyId : null
-            }
-        });
-
-        return NextResponse.json({
-            id: result.person.id,
-            person: result.person,
-            accounts: [result.account]
-        });
+        return NextResponse.json(normalizeCustomer(raw ?? {}));
     } catch (error: any) {
-        await AuditService.log({
-            type: "customer_admin_create_error",
-            payload: { message: error.message }
-        });
-        return NextResponse.json({ error: error.message }, { status: 400 });
+        return NextResponse.json({ error: error?.message || "Failed to create customer." }, { status: 500 });
     }
 }
 
@@ -176,21 +110,36 @@ export async function GET(request: Request) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         }
 
-        const { search } = new URL(request.url);
-        const backendResponse = await fetchBackend(`/api/admin/customers${search}`, {
-            cache: "no-store"
-        });
-        const body = await readBackendJson(backendResponse);
+        const { searchParams } = new URL(request.url);
+        const organizationId =
+            session.user.organizationId ||
+            searchParams.get("organization_id") ||
+            session.organization?.id ||
+            null;
+        if (!organizationId) {
+            return NextResponse.json({ error: "Missing organization scope." }, { status: 400 });
+        }
+
+        const backendResponse = await fetchBackend("/api/v1/customers", {
+            cache: "no-store",
+            headers: {
+                "X-Tenant-ID": organizationId
+            }
+        }, "gestion");
+        const raw = await readBackendJson(backendResponse);
 
         if (!backendResponse.ok) {
             return NextResponse.json(
-                { error: body?.error || "Failed to load customers." },
+                { error: raw?.error || raw?.message || "Failed to load customers." },
                 { status: backendResponse.status }
             );
         }
 
-        return NextResponse.json(Array.isArray(body) ? body : Array.isArray(body?.data) ? body.data : []);
+        const customers = (Array.isArray(raw) ? raw : Array.isArray(raw?.data) ? raw.data : [])
+            .map(normalizeCustomer);
+
+        return NextResponse.json(filterCustomers(customers, searchParams.get("search")));
     } catch (error: any) {
-        return NextResponse.json({ error: error.message }, { status: 500 });
+        return NextResponse.json({ error: error?.message || "Failed to load customers." }, { status: 500 });
     }
 }

@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/auth";
-import { AuditService } from "@/services/audit.service";
+import { fetchBackend, readBackendJson } from "@/lib/backend";
 
 export async function POST(
     request: Request,
@@ -14,54 +13,24 @@ export async function POST(
         }
 
         const { id } = await params;
+        const contentType = request.headers.get("content-type") || "application/json";
+        const bodyText = await request.text();
+        const backendResponse = await fetchBackend(`/api/movements/${id}/account`, {
+            method: "POST",
+            headers: { "Content-Type": contentType },
+            body: bodyText
+        }, "cashier");
+        const body = await readBackendJson(backendResponse);
 
-        // Fetch movement to validate ownership if cashier
-        const movement = await prisma.cashRegisterMovement.findUnique({
-            where: { id },
-            include: {
-                session: {
-                    select: {
-                        open_by: true,
-                        cashRegister: {
-                            select: {
-                                agency_id: true
-                            }
-                        }
-                    }
-                }
-            }
-        });
-
-        if (!movement) {
-            return NextResponse.json({ error: "Movement not found" }, { status: 404 });
+        if (!backendResponse.ok) {
+            return NextResponse.json(
+                { error: body?.error || "Failed to account movement." },
+                { status: backendResponse.status }
+            );
         }
 
-        if (session.user.role === "cashier" && movement.session?.open_by !== session.user.id) {
-            return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-        }
-
-        const updated = await prisma.cashRegisterMovement.update({
-            where: { id },
-            data: { is_accounted: true }
-        });
-
-        await AuditService.log({
-            type: "movement_accounted",
-            authorId: session.user.id,
-            payload: {
-                message: "Movement marked as accounted",
-                subjectType: "movement",
-                subjectId: id,
-                agencyId: movement.session.cashRegister?.agency_id || null
-            }
-        });
-
-        return NextResponse.json({ success: true, movement: updated });
+        return NextResponse.json(body ?? {});
     } catch (error: any) {
-        await AuditService.log({
-            type: "movement_accounted_error",
-            payload: { message: error.message }
-        });
         return NextResponse.json({ error: error.message }, { status: 500 });
     }
 }

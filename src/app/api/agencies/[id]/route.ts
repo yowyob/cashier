@@ -50,10 +50,27 @@ export async function GET(
 
         const { id } = await params;
         const { search } = new URL(request.url);
-        const backendResponse = await fetchBackend(`/api/agencies/${id}${search}`, {
+        let backendResponse = await fetchBackend(`/api/agencies/${id}${search}`, {
             cache: "no-store"
         });
-        const body = await readBackendJson(backendResponse);
+        let body = await readBackendJson(backendResponse);
+
+        if (!backendResponse.ok && (backendResponse.status === 404 || backendResponse.status === 405)) {
+            const listResponse = await fetchBackend(`/api/agencies${search}`, { cache: "no-store" });
+            const listBody = await readBackendJson(listResponse);
+            if (listResponse.ok) {
+                const list = Array.isArray(listBody)
+                    ? listBody
+                    : Array.isArray(listBody?.data)
+                        ? listBody.data
+                        : [];
+                const found = list.find((item: any) => String(item?.id ?? item?.agency_id ?? "") === id);
+                if (found) {
+                    backendResponse = listResponse;
+                    body = found;
+                }
+            }
+        }
 
         if (!backendResponse.ok) {
             return NextResponse.json(

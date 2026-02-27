@@ -1,6 +1,22 @@
 import { NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
-import { prisma } from "@/lib/prisma";
+import { fetchBackend, readBackendJson } from "@/lib/backend";
+
+function withLegacyUserAliases(payload: any) {
+    if (!payload?.user || typeof payload.user !== "object") {
+        return payload;
+    }
+    const user = payload.user;
+    return {
+        ...payload,
+        user: {
+            ...user,
+            roleType: user.roleType ?? user.role_type ?? null,
+            agencyId: user.agencyId ?? user.agency_id ?? null,
+            organizationId: user.organizationId ?? user.organization_id ?? null
+        }
+    };
+}
 
 export async function GET() {
     try {
@@ -9,28 +25,16 @@ export async function GET() {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         }
 
-        let organization: { id: string; name: string } | null = null;
-        let agency: { id: string; name: string } | null = null;
-
-        if (session.user?.organizationId) {
-            organization = await prisma.organization.findUnique({
-                where: { id: session.user.organizationId },
-                select: { id: true, name: true }
-            });
+        const backendResponse = await fetchBackend("/api/auth/session", { cache: "no-store" }, "cashier");
+        const body = await readBackendJson(backendResponse);
+        if (!backendResponse.ok) {
+            return NextResponse.json(
+                { error: body?.error || "Failed to load session." },
+                { status: backendResponse.status }
+            );
         }
 
-        if (session.user?.agencyId) {
-            agency = await prisma.agency.findUnique({
-                where: { id: session.user.agencyId },
-                select: { id: true, name: true }
-            });
-        }
-
-        return NextResponse.json({
-            user: session.user,
-            organization,
-            agency
-        });
+        return NextResponse.json(withLegacyUserAliases(body ?? {}));
     } catch (error: any) {
         return NextResponse.json({ error: error.message }, { status: 500 });
     }

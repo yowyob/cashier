@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
-import { prisma } from "@/lib/prisma";
+import { fetchBackend, readBackendJson } from "@/lib/backend";
 
 export async function PUT(
     request: Request,
@@ -8,50 +8,46 @@ export async function PUT(
 ) {
     try {
         const session = await getSession();
-        if (!session || session.user.role !== "admin" || session.user.roleType !== "superadmin") {
+        if (!session) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         }
 
         const { id } = await params;
-        const body = await request.json();
-        const updated = await prisma.organization.update({
-            where: { id },
-            data: {
-                name: body.name,
-                country: body.country ?? null,
-                description: body.description ?? null,
-                is_active: body.is_active ?? true,
-                telegram_bot_token: body.telegram_bot_token ?? null
-            },
-            include: {
-                creator: {
-                    select: {
-                        user_first_name: true,
-                        user_name: true
-                    }
-                }
-            }
-        });
-        return NextResponse.json(updated);
+        const contentType = request.headers.get("content-type") || "application/json";
+        const bodyText = await request.text();
+        const backendResponse = await fetchBackend(`/organizations/${id}`, {
+            method: "PATCH",
+            headers: { "Content-Type": contentType },
+            body: bodyText
+        }, "gestion");
+        const body = await readBackendJson(backendResponse);
+
+        if (!backendResponse.ok) {
+            return NextResponse.json(
+                { error: body?.error || "Failed to update organization." },
+                { status: backendResponse.status }
+            );
+        }
+
+        return NextResponse.json(body ?? {});
     } catch (error: any) {
-        return NextResponse.json({ error: error.message }, { status: 400 });
+        return NextResponse.json({ error: error?.message || "Failed to update organization." }, { status: 500 });
     }
 }
 
-export async function DELETE(
+export async function PATCH(
     request: Request,
-    { params }: { params: Promise<{ id: string }> }
+    context: { params: Promise<{ id: string }> }
 ) {
-    try {
-        const session = await getSession();
-        if (!session || session.user.role !== "admin" || session.user.roleType !== "superadmin") {
-            return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-        }
+    return PUT(request, context);
+}
 
-        const { id } = await params;
-        await prisma.organization.delete({ where: { id } });
-        return NextResponse.json({ success: true });
-    } catch (error: any) {
-        return NextResponse.json({ error: error.message }, { status: 400 });
-    }
+export async function DELETE(
+    _request: Request,
+    _context: { params: Promise<{ id: string }> }
+) {
+    return NextResponse.json(
+        { error: "Delete organization is not supported by gestion-tiers-backend." },
+        { status: 405 }
+    );
 }
