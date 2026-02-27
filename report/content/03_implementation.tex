@@ -1,0 +1,41 @@
+\chapter{Implémentation et Fonctionnalités}
+
+\section{Workflow Caissier}
+Le module "Point de Vente" (POS) est conçu pour guider le caissier à travers un processus rigoureux, minimisant les risques d'erreurs humaines.
+
+\subsection{Ouverture de Session}
+Avant de pouvoir enregistrer la moindre transaction, le caissier doit impérativement ouvrir une session.
+\begin{enumerate}
+    \item \textbf{Identification :} Le caissier se connecte avec ses identifiants personnels.
+    \item \textbf{Comptage Initial :} Il doit saisir le montant exact présent en caisse (le fond de caisse).
+    \item \textbf{Validation :} Le système crée une nouvelle \textit{Session} en base de données avec le statut \texttt{OPEN}.
+\end{enumerate}
+
+\subsection{Opérations Quotidiennes}
+Une fois la session ouverte, le caissier accède à l'interface de vente. Les fonctionnalités clés incluent :
+\begin{itemize}
+    \item \textbf{Encaissement :} Enregistrement rapide des ventes avec calcul automatique du rendu de monnaie.
+    \item \textbf{Mouvements de Fond :} Possibilité d'ajouter (apport) ou de retirer (prélèvement) de l'argent pour des raisons opérationnelles, avec justification obligatoire.
+    \item \textbf{Visualisation :} Un récapitulatif en temps réel des transactions de la session courante.
+\end{itemize}
+
+\subsection{Clôture et Réconciliation}
+La fin de journée est l'étape la plus critique :
+\begin{enumerate}
+    \item \textbf{Verrouillage :} Le caissier initie la fermeture. La caisse passe en mode "Verrouillé", bloquant toute nouvelle transaction.
+    \item \textbf{Comptage Aveugle :} Le système demande au caissier de saisir le montant final compté, SANS lui afficher le montant théorique attendu. C'est le principe du "Blind Count".
+    \item \textbf{Fermeture :} La session est clôturée. Si un écart existe entre le théorique et le réel, il est enregistré et flagué pour l'administrateur.
+\end{enumerate}
+
+\section{Supervision Administrateur}
+Le panneau d'administration offre une vue d'ensemble ("God Mode") sur l'activité des agences.
+
+\subsection{Tableau de Bord en Temps Réel}
+Les administrateurs peuvent voir l'état de chaque caisse (Ouverte/Fermée) et le caissier actuellement connecté. Des alertes visuelles signalent les sessions ouvertes depuis trop longtemps ou présentant des anomalies.
+
+\subsection{Audit et Rapports}
+L'historique complet est accessible :
+\begin{itemize}
+    \item \textbf{Détail des Sessions :} Accès à la liste exhaustive des mouvements d'une session passée.
+    \item \textbf{Traçabilité des Écarts :} Identification rapide des caissiers ou des périodes générant des écarts de caisse récurrents.
+\end{itemize}

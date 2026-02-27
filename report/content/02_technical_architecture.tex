@@ -1,0 +1,45 @@
+\chapter{Architecture Technique}
+
+\section{Vue d'ensemble de la Stack}
+L'application \textbf{\projectName} repose sur une architecture monolithique moderne, tirant parti de la puissance de l'écosystème JavaScript/TypeScript unifié.
+
+\subsection{Frontend \& Backend (Next.js)}
+Nous utilisons \textbf{Next.js 16} avec l'architecture \textit{App Router}. Ce choix stratégique permet :
+\begin{itemize}
+    \item \textbf{Server Actions :} Traitement sécurisé des soumissions de formulaires et des mutations de données directement côté serveur, sans exposer d'endpoints API publics inutiles.
+    \item \textbf{Server Components (RSC) :} Rendu initial rapide et optimisation SEO, tout en réduisant la taille du bundle JavaScript envoyé au client.
+    \item \textbf{API Routes :} Une couche API intégrée pour les besoins spécifiques (ex: endpoints pour des intégrations tierces ou des appels AJAX complexes).
+\end{itemize}
+
+\subsection{Base de Données (SQLite \& Prisma)}
+Pour la persistance des données, nous avons opté pour \textbf{SQLite} couplé à l'ORM \textbf{Prisma}.
+\begin{itemize}
+    \item \textbf{SQLite :} Offre une simplicité de déploiement (fichier unique) et des performances excellentes pour les volumes de données visés (mono-instance).
+    \item \textbf{Prisma :} Garantit la sécurité des types (Type-Safety) de bout en bout, réduisant drastiquement les erreurs d'exécution liées aux requêtes SQL.
+\end{itemize}
+
+\section{Modélisation des Données}
+Le schéma de base de données est conçu pour garantir l'intégrité financière. Voici les entités critiques :
+
+\subsection{Gestion des Utilisateurs}
+\begin{enumerate}
+    \item \textbf{Person :} L'entité racine représentant un individu physique.
+    \item \textbf{CashierProfile :} Extension pour les employés de caisse, contenant leurs identifiants de connexion spécifiques (PIN ou mot de passe).
+    \item \textbf{AdminProfile :} Extension pour les gestionnaires, conférant des droits d'accès au Back-office.
+\end{enumerate}
+
+\subsection{Gestion des Fonds (Session & Mouvements)}
+Le cœur du système repose sur le concept de \textbf{Session} :
+\begin{itemize}
+    \item \textbf{Session :} Représente une période de travail d'un caissier sur une caisse donnée. Elle capture le fond de caisse initial (\textit{openingBalance}) et final.
+    \item \textbf{Movement :} Chaque transaction (entrée/sortie d'argent) est un enregistrement immuable lié à une session.
+    \item \textbf{Reconciliation :} Entité de vérification où l'administrateur ou le système valide la correspondance entre le solde théorique (calculé via les mouvements) et le solde physique (compté).
+\end{itemize}
+
+\section{Sécurité}
+La sécurité est assurée à plusieurs niveaux :
+\begin{itemize}
+    \item \textbf{Authentification :} Sessions sécurisées via cookies HTTP-only.
+    \item \textbf{Autorisation :} Middleware Next.js vérifiant les rôles avant chaque accès aux routes protégées (/admin/* vs /pos/*).
+    \item \textbf{Traçabilité :} Chaque action critique est logguée avec l'ID de l'utilisateur et un timestamp.
+\end{itemize}

@@ -1,0 +1,31 @@
+\chapter{Introduction}
+
+\section{Contexte et Problématique}
+Dans le secteur de la vente au détail et des services financiers distribués, la gestion des espèces ("Cash Management") représente un défi opérationnel majeur. Les entreprises opérant sur plusieurs sites (agences) font face à des risques constants : erreurs de comptage, pertes inexpliquées, et complexité de consolidation des données financières en fin de journée.
+
+Les méthodes traditionnelles ou manuelles ne suffisent plus pour garantir l'intégrité des fonds. Le projet \textbf{\projectName} naît de ce besoin impératif de digitaliser et de verrouiller les processus de caisse.
+
+\section{Objectifs du Projet}
+L'objectif principal est de fournir un outil unifié qui sert deux acteurs principaux :
+\begin{itemize}
+    \item \textbf{Les Caissiers :} Une interface fluide pour enregistrer les opérations, déclarer les fonds et gérer leur session de travail sans ambiguïté.
+    \item \textbf{Les Administrateurs :} Un tableau de bord de supervision ("Admin Panel") permettant de configurer les agences, d'assigner les caisses, et d'auditer les écarts de caisse en temps réel.
+\end{itemize}
+
+\section{Périmètre du Travail}
+Le périmètre couvre l'intégralité de la chaîne de valeur logicielle :
+
+\subsection{Backend (API & Data)}
+Le cœur du système est une API RESTful robuste exposée par Next.js. Elle gère :
+\begin{itemize}
+    \item \textbf{L'Authentification & Rôles :} Sécurisation des accès via des profils distincts (Person, CashierProfile, AdminProfile).
+    \item \textbf{Logique Métier Complexe :} Gestion des états de session (ouverte/fermée/verrouillée) et calcul des soldes théoriques.
+    \item \textbf{Persistance :} Modélisation précise des données (Prisma Schema) incluant les entités \textit{CashRegister}, \textit{Session}, \textit{Movement}, et \textit{Reconciliation}.
+\end{itemize}
+
+\subsection{Frontend (Interfaces Utilisateur)}
+Deux interfaces distinctes ont été développées :
+\begin{itemize}
+    \item \textbf{Back-office Admin :} Pour la gestion des référentiels (Agences, Utilisateurs, Caisses) et l'analyse des sessions.
+    \item \textbf{Front-office Caissier :} Optimisé pour la saisie rapide et la fiabilité des opérations quotidiennes.
+\end{itemize}

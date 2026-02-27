@@ -1,0 +1,20 @@
+% Brand Colors
+\definecolor{primaryBlue}{RGB}{44, 62, 80}    % Slate / Dark Blue
+\definecolor{accentBlue}{RGB}{52, 152, 219}   % Light Blue
+\definecolor{lightGray}{RGB}{236, 240, 241}   % Light Gray Background potential
+
+% Section Styles
+\titleformat{\chapter}[display]
+  {\normalfont\huge\bfseries\color{primaryBlue}}
+  {\chaptertitlename\ \thechapter}{20pt}{\Huge}
+  
+\titleformat{\section}
+  {\normalfont\Large\bfseries\color{primaryBlue}}
+  {\thesection}{1em}{}
+  
+\titleformat{\subsection}
+  {\normalfont\large\bfseries\color{accentBlue}}
+  {\thesubsection}{1em}{}
+
+% Custom command for project name
+\newcommand{\projectName}{ERP Cashier}
