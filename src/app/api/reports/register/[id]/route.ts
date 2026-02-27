@@ -1,10 +1,6 @@
 import { NextResponse } from "next/server";
-import { ReportService } from "@/services/report.service";
-import { generateRegisterReport } from "@/lib/pdf-generator";
-import { AuditService } from "@/services/audit.service";
 import { getSession } from "@/lib/auth";
-import { getAdminMonitoringScope } from "@/lib/monitoring";
-import { prisma } from "@/lib/prisma";
+import { fetchBackend, readBackendJson } from "@/lib/backend";
 
 export async function POST(
     request: Request,
@@ -17,70 +13,42 @@ export async function POST(
         }
 
         const { id } = await params;
-        const body = await request.json();
-        const { startDate, endDate } = body;
+        const contentType = request.headers.get("content-type") || "application/json";
+        const bodyText = await request.text();
 
-        if (!startDate || !endDate) {
-            return NextResponse.json({ error: "Start date and end date are required" }, { status: 400 });
-        }
-
-        const register = await prisma.cashRegister.findUnique({
-            where: { id },
-            select: {
-                agency_id: true,
-                agency: { select: { organization_id: true } }
-            }
+        const backendResponse = await fetchBackend(`/api/reports/register/${id}`, {
+            method: "POST",
+            headers: { "Content-Type": contentType },
+            body: bodyText
         });
-        if (!register) {
-            return NextResponse.json({ error: "Register not found" }, { status: 404 });
-        }
-        if (session.user.roleType === "agency_admin" && session.user.agencyId) {
-            if (register.agency_id !== session.user.agencyId) {
-                return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-            }
-        }
-        if (session.user.roleType === "organization_admin" && session.user.organizationId) {
-            if (register.agency?.organization_id !== session.user.organizationId) {
-                return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-            }
-        }
-        const monitoring = await getAdminMonitoringScope(session);
-        if (monitoring.agencyIds && !monitoring.agencyIds.includes(register.agency_id || "")) {
-            return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-        }
-        if (monitoring.registerIds && !monitoring.registerIds.includes(id)) {
-            return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+
+        if (backendResponse.ok) {
+            const contentTypeHeader = backendResponse.headers.get("content-type") || "application/pdf";
+            const disposition =
+                backendResponse.headers.get("content-disposition") ||
+                `attachment; filename=\"register-${id}-${new Date().toISOString().split("T")[0]}.pdf\"`;
+            const buffer = await backendResponse.arrayBuffer();
+            return new NextResponse(buffer, {
+                headers: {
+                    "Content-Type": contentTypeHeader,
+                    "Content-Disposition": disposition
+                }
+            });
         }
 
-        const reportData = await ReportService.getRegisterReportData(
-            id,
-            new Date(startDate),
-            new Date(endDate)
+        const body = await readBackendJson(backendResponse);
+        if (backendResponse.status === 404 || backendResponse.status === 405) {
+            return NextResponse.json(
+                { error: "Register report endpoint is not available on the configured backends." },
+                { status: 501 }
+            );
+        }
+
+        return NextResponse.json(
+            { error: body?.error || "Failed to generate register report." },
+            { status: backendResponse.status }
         );
-
-        const pdfBuffer = generateRegisterReport(reportData);
-
-        await AuditService.log({
-            type: "report_register",
-            payload: {
-                message: "Register report generated",
-                subjectType: "cash_register",
-                subjectId: id,
-                data: { startDate, endDate }
-            }
-        });
-
-        return new NextResponse(pdfBuffer, {
-            headers: {
-                'Content-Type': 'application/pdf',
-                'Content-Disposition': `attachment; filename="register-${id}-${new Date().toISOString().split('T')[0]}.pdf"`
-            }
-        });
     } catch (error: any) {
-        await AuditService.log({
-            type: "report_register_error",
-            payload: { message: error.message }
-        });
-        return NextResponse.json({ error: error.message }, { status: 500 });
+        return NextResponse.json({ error: error?.message || "Failed to generate register report." }, { status: 500 });
     }
 }

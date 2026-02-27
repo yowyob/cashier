@@ -1,7 +1,5 @@
 import { NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
-import { prisma } from "@/lib/prisma";
-import { hashPassword } from "@/lib/passwords";
 import { getAdminMonitoringScope } from "@/lib/monitoring";
 import { applyMonitoringScope } from "@/lib/monitoring-scope-filter";
 import { fetchBackend, readBackendJson } from "@/lib/backend";
@@ -28,77 +26,24 @@ export async function POST(request: Request) {
             return NextResponse.json({ error: "Forbidden" }, { status: 403 });
         }
 
-        const body = await request.json();
-        const missingFields = [
-            ["user_name", body.user_name],
-            ["user_first_name", body.user_first_name],
-            ["password", body.password],
-            ["account_number", body.account_number],
-            ["work_town", body.work_town]
-        ]
-            .filter(([, value]) => !value)
-            .map(([field]) => field);
-        if (missingFields.length > 0) {
-            return NextResponse.json(
-                { error: `Missing required fields: ${missingFields.join(", ")}` },
-                { status: 400 }
-            );
-        }
-        const organizationId =
-            session.user.roleType === "organization_admin"
-                ? session.user.organizationId || null
-                : body.organization_id ?? null;
-        if (!organizationId) {
-            return NextResponse.json({ error: "organization_id is required" }, { status: 400 });
-        }
-        if (!body.base_agency_id) {
-            return NextResponse.json({ error: "base_agency_id is required" }, { status: 400 });
-        }
-        const baseAgency = await prisma.agency.findUnique({
-            where: { id: body.base_agency_id }
+        const contentType = request.headers.get("content-type") || "application/json";
+        const bodyText = await request.text();
+        const backendResponse = await fetchBackend("/api/users/cashiers", {
+            method: "POST",
+            headers: { "Content-Type": contentType },
+            body: bodyText
         });
-        if (!baseAgency) {
-            return NextResponse.json({ error: "Base agency not found" }, { status: 404 });
-        }
-        if (baseAgency.organization_id !== organizationId) {
+        const body = await readBackendJson(backendResponse);
+        if (!backendResponse.ok) {
             return NextResponse.json(
-                { error: "Base agency does not belong to the organization." },
-                { status: 400 }
+                { error: body?.error || "Failed to create cashier." },
+                { status: backendResponse.status }
             );
         }
-        if (body.work_town && baseAgency.town !== body.work_town) {
-            return NextResponse.json(
-                { error: "Base agency must be in the work town." },
-                { status: 400 }
-            );
-        }
-        const hashed = await hashPassword(body.password);
-        const created = await prisma.person.create({
-            data: {
-                user_name: body.user_name,
-                user_first_name: body.user_first_name,
-                password: hashed,
-                mail: body.mail ?? null,
-                account_number: body.account_number ?? null,
-                country: body.country ?? null,
-                phone: body.phone ?? null,
-                cashierProfile: {
-                    create: {
-                        town_list_chosen: body.town_list_chosen ?? null,
-                        work_town: body.work_town ?? null,
-                        hire_date: body.hire_date ? new Date(body.hire_date) : null,
-                        organization_id: organizationId,
-                        base_agency_id: body.base_agency_id
-                    }
-                }
-            },
-            include: {
-                cashierProfile: true
-            }
-        });
-        return NextResponse.json(normalizeCashierPayload(created));
+
+        return NextResponse.json(normalizeCashierPayload(body ?? {}));
     } catch (error: any) {
-        return NextResponse.json({ error: error.message }, { status: 400 });
+        return NextResponse.json({ error: error.message }, { status: 500 });
     }
 }
 

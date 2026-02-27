@@ -1,8 +1,12 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
-import { AuditService } from "@/services/audit.service";
 import { getSession } from "@/lib/auth";
-import { getAdminMonitoringScope } from "@/lib/monitoring";
+import { fetchBackend, readBackendJson } from "@/lib/backend";
+
+function asArray(payload: any): any[] {
+    if (Array.isArray(payload)) return payload;
+    if (Array.isArray(payload?.data)) return payload.data;
+    return [];
+}
 
 export async function GET() {
     try {
@@ -11,66 +15,20 @@ export async function GET() {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         }
 
-        let where: any = {};
-        if (session.user.roleType === "agency_admin" && session.user.agencyId) {
-            where = {
-                uploader: {
-                    adminProfile: {
-                        is: { agency_id: session.user.agencyId }
-                    }
-                }
-            };
-        } else if (session.user.roleType === "organization_admin" && session.user.organizationId) {
-            where = {
-                uploader: {
-                    adminProfile: {
-                        is: {
-                            OR: [
-                                { organization_id: session.user.organizationId },
-                                { agency: { is: { organization_id: session.user.organizationId } } }
-                            ]
-                        }
-                    }
-                }
-            };
-        }
-        const monitoring = await getAdminMonitoringScope(session);
-        if (monitoring.agencyIds) {
-            where = {
-                uploader: {
-                    adminProfile: {
-                        is: {
-                            agency_id: { in: monitoring.agencyIds }
-                        }
-                    }
-                }
-            };
-        }
-
-        const documents = await prisma.attachedDocument.findMany({
-            where,
-            include: {
-                uploader: {
-                    include: {
-                        adminProfile: true
-                    }
-                }
-            },
-            orderBy: {
-                upload_on: 'desc'
+        const backendResponse = await fetchBackend("/api/admin/documents", { cache: "no-store" });
+        const body = await readBackendJson(backendResponse);
+        if (!backendResponse.ok) {
+            if (backendResponse.status === 404 || backendResponse.status === 405) {
+                return NextResponse.json([]);
             }
-        });
+            return NextResponse.json(
+                { error: body?.error || "Failed to load documents." },
+                { status: backendResponse.status }
+            );
+        }
 
-        await AuditService.log({
-            type: "documents_list",
-            payload: { message: "Documents fetched" }
-        });
-        return NextResponse.json(documents);
+        return NextResponse.json(asArray(body));
     } catch (error: any) {
-        await AuditService.log({
-            type: "documents_list_error",
-            payload: { message: error.message }
-        });
-        return NextResponse.json({ error: error.message }, { status: 500 });
+        return NextResponse.json({ error: error?.message || "Failed to load documents." }, { status: 500 });
     }
 }

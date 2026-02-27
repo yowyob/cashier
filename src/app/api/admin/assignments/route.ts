@@ -1,8 +1,12 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
-import { AuditService } from "@/services/audit.service";
 import { getSession } from "@/lib/auth";
-import { getAdminMonitoringScope } from "@/lib/monitoring";
+import { fetchBackend, readBackendJson } from "@/lib/backend";
+
+function asArray(payload: any): any[] {
+    if (Array.isArray(payload)) return payload;
+    if (Array.isArray(payload?.data)) return payload.data;
+    return [];
+}
 
 export async function GET() {
     try {
@@ -11,65 +15,26 @@ export async function GET() {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         }
 
-        let where: any = {};
-        if (session.user.roleType === "agency_admin" && session.user.agencyId) {
-            where = {
-                cashRegister: {
-                    agency_id: session.user.agencyId
-                }
-            };
-        } else if (session.user.roleType === "organization_admin" && session.user.organizationId) {
-            where = {
-                cashRegister: {
-                    agency: {
-                        is: {
-                            organization_id: session.user.organizationId
-                        }
-                    }
-                }
-            };
-        }
-        const monitoring = await getAdminMonitoringScope(session);
-        if (monitoring.registerIds) {
-            where = {
-                ...where,
-                cash_register_id: { in: monitoring.registerIds }
-            };
-        } else if (monitoring.agencyIds) {
-            where = {
-                ...where,
-                cashRegister: {
-                    ...(where.cashRegister || {}),
-                    agency_id: { in: monitoring.agencyIds }
-                }
-            };
+        let backendResponse = await fetchBackend("/api/admin/assignments", { cache: "no-store" });
+        let body = await readBackendJson(backendResponse);
+
+        if (!backendResponse.ok && (backendResponse.status === 404 || backendResponse.status === 405)) {
+            backendResponse = await fetchBackend("/api/admin/cashier-agency-assignments", { cache: "no-store" });
+            body = await readBackendJson(backendResponse);
         }
 
-        const assignments = await prisma.cashierManageCashRegister.findMany({
-            where,
-            include: {
-                person: true,
-                cashRegister: {
-                    include: {
-                        agency: true
-                    }
-                }
-            },
-            orderBy: {
-                day: 'desc'
+        if (!backendResponse.ok) {
+            if (backendResponse.status === 404 || backendResponse.status === 405) {
+                return NextResponse.json([]);
             }
-        });
+            return NextResponse.json(
+                { error: body?.error || "Failed to load assignments." },
+                { status: backendResponse.status }
+            );
+        }
 
-        await AuditService.log({
-            type: "assignments_list",
-            payload: { message: "Assignments fetched" }
-        });
-        return NextResponse.json(assignments);
+        return NextResponse.json(asArray(body));
     } catch (error: any) {
-        await AuditService.log({
-            type: "assignments_list_error",
-            payload: { message: error.message }
-        });
-        return NextResponse.json({ error: error.message }, { status: 500 });
+        return NextResponse.json({ error: error?.message || "Failed to load assignments." }, { status: 500 });
     }
 }
