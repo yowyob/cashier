@@ -8,10 +8,7 @@
 
 services:
   erp-cashier:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    image: erp-cashier-frontend:local
+    image: ${CASHIER_FRONTEND_IMAGE:-ghcr.io/djotio/rt-comops:latest}
     container_name: erp-cashier-frontend
     restart: unless-stopped
     environment:
