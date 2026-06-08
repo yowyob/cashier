@@ -8,6 +8,8 @@ RUN npm ci
 
 # Code + génération Prisma + build Next
 COPY . .
+# DATABASE_URL factice requis par Prisma 7 au build (generate/build n'ouvrent pas la vraie DB).
+ENV DATABASE_URL=file:/tmp/build.db
 RUN npx prisma generate && npm run build
 
 FROM node:22-bookworm-slim AS runtime
