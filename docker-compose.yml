@@ -15,7 +15,10 @@ services:
     container_name: erp-cashier-frontend
     restart: unless-stopped
     environment:
+      # B2B strict : les DEUX cibles de routing (cashier + gestion-tiers) pointent sur le BFF caisse.
+      # Le front ne joint jamais iwm directement ; le BFF relaie les appels gestion-tiers vers iwm.
       ERP_CASHIER_BACKEND_URL: ${ERP_CASHIER_BACKEND_URL:-http://erp-cashier-backend:8081}
+      GESTION_TIERS_BACKEND_URL: ${GESTION_TIERS_BACKEND_URL:-http://erp-cashier-backend:8081}
       ERP_TENANT_ID: ${ERP_TENANT_ID:-11111111-1111-1111-1111-111111111111}
       AUTH_SECRET: ${AUTH_SECRET:?Definir AUTH_SECRET}
       USE_LOCAL_AUTH: ${USE_LOCAL_AUTH:-false}
