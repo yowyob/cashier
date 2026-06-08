@@ -25,8 +25,14 @@ services:
       TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN:-}
     volumes:
       - erp-cashier-data:/app/data
-    ports:
-      - "${FRONTEND_PUBLIC_PORT:-3000}:3000"
+    # Routé par Traefik (caisse.<IP>.nip.io) → plus de port hôte.
+    # NB : le front appelle son BFF côté serveur (nom de conteneur), pas depuis le navigateur.
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.cashier-front.rule=Host(`caisse.${PUBLIC_HOST:-localhost}`)"
+      - "traefik.http.routers.cashier-front.entrypoints=web"
+      - "traefik.http.services.cashier-front.loadbalancer.server.port=3000"
+      - "traefik.docker.network=cashier-net"
     networks:
       - cashier
 
