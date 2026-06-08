@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { Suspense, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 
 type OrganizationMembership = {
@@ -65,7 +65,7 @@ function resolveRoleName(
     return null;
 }
 
-export default function LoginPage() {
+function LoginPageInner() {
     const searchParams = useSearchParams();
     const queryError = searchParams.get("error");
     const [step, setStep] = useState<"login" | "organization">("login");
@@ -327,5 +327,14 @@ export default function LoginPage() {
                 )}
             </div>
         </div>
+    );
+}
+
+// useSearchParams() exige une frontière Suspense (Next 16) pour éviter le bailout au prerender.
+export default function LoginPage() {
+    return (
+        <Suspense fallback={null}>
+            <LoginPageInner />
+        </Suspense>
     );
 }
