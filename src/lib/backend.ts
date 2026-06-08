@@ -37,13 +37,23 @@ function normalizeBaseUrl(baseUrl: string) {
     return baseUrl.endsWith("/") ? baseUrl.slice(0, -1) : baseUrl;
 }
 
+// Déploiement B2B strict : quand la cible gestion-tiers EST le même backend que la caisse
+// (un seul BFF passerelle), on NE strippe PAS le préfixe /api — le BFF et iwm exposent /api/...
+function isSingleBackend() {
+    return normalizeBaseUrl(GESTION_TIERS_BACKEND_URL) === normalizeBaseUrl(CASHIER_BACKEND_URL);
+}
+
 function rewriteGestionPath(path: string) {
     const parsed = new URL(path.startsWith("/") ? path : `/${path}`, "http://local");
+    const singleBackend = isSingleBackend();
     const exact = GESTION_EXACT_PATH_REWRITES[parsed.pathname];
     if (exact) {
-        return `${exact}${parsed.search}`;
+        // exact = "/organizations/my" (endpoint racine du backend gestion-tiers dédié).
+        // En mode mono-BFF, on conserve le préfixe /api (le BFF relaie /api/organizations/my → iwm).
+        const target = singleBackend ? `/api${exact}` : exact;
+        return `${target}${parsed.search}`;
     }
-    if (parsed.pathname.startsWith("/api/") && !parsed.pathname.startsWith("/api/v1/")) {
+    if (!singleBackend && parsed.pathname.startsWith("/api/") && !parsed.pathname.startsWith("/api/v1/")) {
         return `${parsed.pathname.slice(4)}${parsed.search}`;
     }
     return `${parsed.pathname}${parsed.search}`;
