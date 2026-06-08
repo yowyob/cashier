@@ -1,5 +1,7 @@
-# Déploiement INDÉPENDANT du frontend caisse, branché sur l'infra partagée (réseau iwm-vm-network).
-# Le frontend appelle le BFF caisse (conteneur erp-cashier-backend) par son nom de service.
+# Déploiement INDÉPENDANT du frontend caisse.
+# Le front NE communique QU'AVEC son BFF (erp-cashier-backend) — JAMAIS directement avec iwm (B2B).
+# Il rejoint uniquement le réseau privé "cashier-net" (créé par le compose du BFF), pas le réseau infra iwm.
+# Déployer le BFF AVANT le front (le BFF crée cashier-net).
 #
 #   cp .env.example .env   # renseigner AUTH_SECRET + tenant
 #   docker compose up -d --build
@@ -23,12 +25,13 @@ services:
     ports:
       - "${FRONTEND_PUBLIC_PORT:-3000}:3000"
     networks:
-      - iwm
+      - cashier
 
 volumes:
   erp-cashier-data:
 
 networks:
-  iwm:
+  # Réseau privé front ↔ BFF uniquement (créé par le compose du BFF). Pas d'accès à iwm.
+  cashier:
     external: true
-    name: iwm-vm-network
+    name: cashier-net
