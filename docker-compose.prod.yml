@@ -29,7 +29,7 @@ services:
       - erp-cashier-data:/app/data
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.cashier-front.rule=Host(`caisse.yowyob.com`)"
+      - "traefik.http.routers.cashier-front.rule=Host(`cashier.yowyob.com`)"
       - "traefik.http.routers.cashier-front.entrypoints=websecure"
       - "traefik.http.routers.cashier-front.tls=true"
       - "traefik.http.routers.cashier-front.tls.certresolver=letsencrypt"
