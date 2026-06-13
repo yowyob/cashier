@@ -1,0 +1,48 @@
+# Front caisse (Next.js) — PRODUCTION sur le serveur yowyob.
+# ARCHI : le front EST son propre BFF. Ses route handlers (src/app/api/*) appellent kernel-core
+# DIRECTEMENT, côté serveur uniquement, via lib/backend.ts qui injecte l'identité client
+# (X-Client-Id/X-Api-Key = client kernel "cashier-backend") + le jeton de session.
+# Le BFF Spring séparé n'est plus nécessaire (le domaine caisse vit dans cashier-core de kernel-core).
+#
+# B2B : le NAVIGATEUR ne joint jamais kernel-core (il ne parle qu'aux routes Next). La clé client
+# reste strictement server-side (jamais NEXT_PUBLIC_). Le conteneur front est sur "yowyob" pour
+# que SON SERVEUR atteigne kernel-core en interne.
+services:
+  erp-cashier:
+    image: "${CASHIER_FRONTEND_IMAGE:?CASHIER_FRONTEND_IMAGE requis - ex cashier/frontend:main}"
+    container_name: erp-cashier-frontend
+    pull_policy: never
+    restart: unless-stopped
+    env_file: [.env]
+    environment:
+      # Cible unique = kernel-core (mode "single backend" géré par lib/backend.ts).
+      ERP_CASHIER_BACKEND_URL: "http://kernel-core-kernel-layer-1:8080"
+      GESTION_TIERS_BACKEND_URL: "http://kernel-core-kernel-layer-1:8080"
+      # Identité client kernel-core (server-side uniquement).
+      KERNEL_CLIENT_ID: "cashier-backend"
+      KERNEL_CLIENT_SECRET: "${KERNEL_CLIENT_SECRET:?KERNEL_CLIENT_SECRET requis dans .env}"
+      KERNEL_TENANT_ID: "${ERP_TENANT_ID:-11111111-1111-1111-1111-111111111111}"
+      ERP_TENANT_ID: "${ERP_TENANT_ID:-11111111-1111-1111-1111-111111111111}"
+      AUTH_SECRET: "${AUTH_SECRET:?AUTH_SECRET requis dans .env}"
+      USE_LOCAL_AUTH: "false"
+    volumes:
+      - erp-cashier-data:/app/data
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.cashier-front.rule=Host(`caisse.yowyob.com`)"
+      - "traefik.http.routers.cashier-front.entrypoints=websecure"
+      - "traefik.http.routers.cashier-front.tls=true"
+      - "traefik.http.routers.cashier-front.tls.certresolver=letsencrypt"
+      - "traefik.http.services.cashier-front.loadbalancer.server.port=3000"
+      - "traefik.docker.network=yowyob"
+    networks:
+      - yowyob
+
+volumes:
+  erp-cashier-data:
+
+networks:
+  # Réseau partagé du serveur : permet au SERVEUR Next d'atteindre kernel-core + exposition Traefik.
+  yowyob:
+    external: true
+    name: yowyob

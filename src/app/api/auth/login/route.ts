@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { encrypt } from "@/lib/auth";
-import { buildBackendUrl, readBackendJson } from "@/lib/backend";
+import { buildBackendUrl, readBackendJson, kernelAuthHeaders } from "@/lib/backend";
 
 const BACKEND_LOGIN_PATH = "/api/auth/login";
 
@@ -13,29 +13,6 @@ type BackendLoginUser = {
     organization_id?: string | null;
     banking_account?: string | null;
     accounting_account?: string | null;
-};
-
-type BackendOrganization = {
-    organization_id: string;
-    organization_name: string;
-    role_id?: string | null;
-    role_name?: string | null;
-    agency_id?: string | null;
-    agency_name?: string | null;
-    is_active?: boolean | null;
-    joined_at?: string | null;
-};
-
-type BackendLoginResponse = {
-    success: boolean;
-    user: BackendLoginUser;
-    access_token?: string;
-    accessToken?: string;
-    token_type?: string;
-    tokenType?: string;
-    expires_in?: number;
-    expiresIn?: number;
-    organizations?: BackendOrganization[];
 };
 
 function normalizeField(value: unknown) {
@@ -93,36 +70,73 @@ export async function POST(request: Request) {
                 : redirectWithError(invalidMessage, 303);
         }
 
+        // Login direct contre kernel-core : champ "principal" (pas "email") + identité client
+        // du BFF (X-Client-Id/X-Api-Key/X-Tenant-Id) injectée par kernelAuthHeaders.
+        const loginHeaders = await kernelAuthHeaders(new Headers({ "Content-Type": "application/json" }));
         const backendResponse = await fetch(buildBackendUrl(BACKEND_LOGIN_PATH), {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ email, password })
+            headers: loginHeaders,
+            body: JSON.stringify({ principal: email, password })
         });
 
-        const backendBody = (await readBackendJson(backendResponse)) as BackendLoginResponse | null;
-        if (!backendResponse.ok || !backendBody?.success || !backendBody.user) {
+        // kernel-core enveloppe la réponse dans {success, data:{...}} ; readBackendJson
+        // convertit déjà les clés en snake_case (accessToken -> access_token, nextStep -> next_step).
+        const raw = (await readBackendJson(backendResponse)) as any;
+        const d = (raw?.data ?? raw) as any;
+        if (!backendResponse.ok || !raw?.success || !d) {
             return expectsJson
                 ? NextResponse.json({ error: invalidMessage }, { status: backendResponse.status || 401 })
                 : redirectWithError(invalidMessage, 303);
         }
 
+        // Comptes privilégiés (admin plateforme) -> MFA. Les caissiers n'ont pas de MFA ; on
+        // remonte proprement le cas plutôt que de créer une session incomplète.
+        if (d.next_step === "CONFIRM_MFA" || d.mfa_token) {
+            const mfaMsg = "MFA required";
+            return expectsJson
+                ? NextResponse.json({ error: mfaMsg, mfaRequired: true }, { status: 401 })
+                : redirectWithError(mfaMsg, 303);
+        }
+
+        const accessToken = d.access_token || d.session_token || null;
+
+        // Enrichissement identité caissier (rôle/agence/org) depuis cashier-core : ces champs
+        // ne sont pas dans la réponse d'auth de kernel-core. Best-effort : un échec ne bloque
+        // pas le login (l'UI pourra recharger le profil).
+        let profile: any = null;
+        try {
+            const profileHeaders = await kernelAuthHeaders(new Headers());
+            if (accessToken) profileHeaders.set("Authorization", `Bearer ${accessToken}`);
+            const profileResp = await fetch(
+                buildBackendUrl(`/api/cashiers/self-profile?principalEmail=${encodeURIComponent(email)}`),
+                { headers: profileHeaders }
+            );
+            if (profileResp.ok) profile = await readBackendJson(profileResp);
+        } catch {
+            profile = null;
+        }
+
+        const kind = (profile?.kind || "").toString().toLowerCase();
+        const roleInfo = kind
+            ? resolveRole({ ...d, role_type: kind } as BackendLoginUser)
+            : resolveRole(d as BackendLoginUser);
+
         const expires = new Date(Date.now() + 24 * 60 * 60 * 1000);
-        const roleInfo = resolveRole(backendBody.user);
         const session = await encrypt({
             user: {
-                id: backendBody.user.id,
-                username: backendBody.user.username || email,
+                id: profile?.kernel_user_id || d.id || d.user_id,
+                username: d.username || email,
                 role: roleInfo.role,
                 roleType: roleInfo.roleType,
-                agencyId: backendBody.user.agency_id ?? null,
-                organizationId: backendBody.user.organization_id ?? null,
-                bankingAccount: backendBody.user.banking_account ?? null,
-                accountingAccount: backendBody.user.accounting_account ?? null
+                agencyId: profile?.agency_id ?? d.agency_id ?? null,
+                organizationId: profile?.organization_id ?? d.organization_id ?? null,
+                bankingAccount: profile?.banking_account ?? d.banking_account ?? null,
+                accountingAccount: profile?.accounting_account ?? d.accounting_account ?? null
             },
             backend: {
-                accessToken: backendBody.access_token || backendBody.accessToken || null,
-                tokenType: backendBody.token_type || backendBody.tokenType || "Bearer",
-                expiresIn: backendBody.expires_in || backendBody.expiresIn || null
+                accessToken,
+                tokenType: d.token_type || "Bearer",
+                expiresIn: d.expires_in_seconds || d.expires_in || null
             },
             expires
         });
@@ -141,8 +155,15 @@ export async function POST(request: Request) {
         const response = expectsJson
             ? NextResponse.json({
                 success: true,
-                user: backendBody.user,
-                organizations: backendBody.organizations || []
+                user: {
+                    id: profile?.kernel_user_id || d.id || d.user_id,
+                    username: d.username || email,
+                    role: roleInfo.role,
+                    role_type: roleInfo.roleType,
+                    agency_id: profile?.agency_id ?? d.agency_id ?? null,
+                    organization_id: profile?.organization_id ?? d.organization_id ?? null
+                },
+                organizations: d.organizations || []
             })
             : NextResponse.redirect(redirectTo("/"), { status: 303 });
 
