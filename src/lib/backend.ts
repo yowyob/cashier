@@ -134,7 +134,36 @@ export function buildBackendUrl(path: string, target?: BackendTarget) {
 
 export async function fetchBackend(path: string, options: RequestInit = {}, target?: BackendTarget) {
     const headers = await kernelAuthHeaders(new Headers(options.headers || {}));
-    return fetch(buildBackendUrl(path, target), { ...options, headers });
+    const response = await fetch(buildBackendUrl(path, target), { ...options, headers });
+    observeQuota(path, response);
+    return response;
+}
+
+/**
+ * Quota plateforme (imposé par kernel-core) lu sur la réponse. Le kernel reste le gardien ;
+ * ici on observe pour journaliser et permettre à l'UI de réagir (429 / quota bas).
+ */
+export function readQuota(response: Response) {
+    const limit = response.headers.get("X-IWM-Quota-Limit");
+    const remaining = response.headers.get("X-IWM-Quota-Remaining");
+    if (limit == null && remaining == null) return null;
+    return {
+        limit: limit != null ? Number(limit) : null,
+        remaining: remaining != null ? Number(remaining) : null,
+        windowSeconds: Number(response.headers.get("X-IWM-Quota-Window-Seconds")) || null,
+        retryAfter: Number(response.headers.get("Retry-After")) || null,
+        exceeded: response.status === 429
+    };
+}
+
+function observeQuota(path: string, response: Response) {
+    const q = readQuota(response);
+    if (!q) return;
+    if (q.exceeded) {
+        console.warn(`[quota] 429 sur ${path} — Retry-After=${q.retryAfter}s (limite ${q.limit}/${q.windowSeconds}s)`);
+    } else if (q.remaining != null && q.limit != null && q.remaining <= Math.max(1, Math.floor(q.limit * 0.1))) {
+        console.warn(`[quota] proche de la limite sur ${path}: ${q.remaining}/${q.limit} restants`);
+    }
 }
 
 export async function readBackendJson(response: Response) {
