@@ -22,11 +22,16 @@ function normalizeField(value: unknown) {
 }
 
 function resolveRole(user: BackendLoginUser) {
+    // roleType reçoit le "kind" du profil caisse kernel (cashier-core) — valeurs possibles :
+    // CASHIER, USER_ADMIN, ORGANIZATION_ADMIN, AGENCY_ADMIN, SELF — ou un role_type legacy.
     const roleType = (user.role_type || "").toLowerCase();
     if (roleType === "superadmin") return { role: "admin", roleType: "superadmin" as const };
     if (roleType === "organization_admin") return { role: "admin", roleType: "organization_admin" as const };
     if (roleType === "agency_admin") return { role: "admin", roleType: "agency_admin" as const };
-    if (roleType === "salesperson") return { role: "cashier", roleType: null };
+    // USER_ADMIN = admin caisse non scopé ; on le traite comme un admin.
+    if (roleType === "user_admin") return { role: "admin", roleType: null };
+    // CASHIER = caissier (kind kernel) ; salesperson = alias legacy.
+    if (roleType === "salesperson" || roleType === "cashier") return { role: "cashier", roleType: null };
     const role = (user.role || "").toLowerCase();
     if (role === "admin") return { role: "admin", roleType: null };
     if (role === "cashier") return { role: "cashier", roleType: null };
