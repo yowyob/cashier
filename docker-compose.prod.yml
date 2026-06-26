@@ -9,9 +9,10 @@
 # que SON SERVEUR atteigne kernel-core en interne.
 services:
   erp-cashier:
-    image: "${CASHIER_FRONTEND_IMAGE:?CASHIER_FRONTEND_IMAGE requis - ex cashier/frontend:main}"
+    image: "${CASHIER_FRONTEND_IMAGE:?CASHIER_FRONTEND_IMAGE requis - ex ghcr.io/yowyob/cashier:sha-xxxx}"
     container_name: erp-cashier-frontend
-    pull_policy: never
+    # Image tirée de GHCR par le job deploy (le serveur a une auth GHCR persistante).
+    pull_policy: always
     restart: unless-stopped
     env_file: [.env]
     environment:
