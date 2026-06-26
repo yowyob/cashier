@@ -105,6 +105,15 @@ export async function POST(request: Request) {
 
         const accessToken = d.access_token || d.session_token || null;
 
+        // Organisation du contexte de login : kernel-core ne renvoie pas encore de session ici, donc
+        // on prend la 1re org d'accès retournée par l'auth. Elle est INDISPENSABLE pour appeler des
+        // endpoints org-scopés comme /api/cashiers/self-profile (sinon 400 ORGANIZATION_CONTEXT_REQUIRED).
+        const loginOrgs = Array.isArray(d.organizations) ? d.organizations : [];
+        const loginOrgId = d.selected_organization_id
+            || loginOrgs[0]?.organization_id
+            || loginOrgs[0]?.organizationId
+            || null;
+
         // Enrichissement identité caissier (rôle/agence/org) depuis cashier-core : ces champs
         // ne sont pas dans la réponse d'auth de kernel-core. Best-effort : un échec ne bloque
         // pas le login (l'UI pourra recharger le profil).
@@ -112,6 +121,8 @@ export async function POST(request: Request) {
         try {
             const profileHeaders = await kernelAuthHeaders(new Headers());
             if (accessToken) profileHeaders.set("Authorization", `Bearer ${accessToken}`);
+            // La session n'existe pas encore : injecter explicitement l'org du contexte de login.
+            if (loginOrgId) profileHeaders.set("X-Organization-Id", String(loginOrgId));
             const profileResp = await fetch(
                 buildBackendUrl(`/api/cashiers/self-profile?principalEmail=${encodeURIComponent(email)}`),
                 { headers: profileHeaders }
@@ -134,7 +145,7 @@ export async function POST(request: Request) {
                 role: roleInfo.role,
                 roleType: roleInfo.roleType,
                 agencyId: profile?.agency_id ?? d.agency_id ?? null,
-                organizationId: profile?.organization_id ?? d.organization_id ?? null,
+                organizationId: profile?.organization_id ?? d.organization_id ?? loginOrgId ?? null,
                 bankingAccount: profile?.banking_account ?? d.banking_account ?? null,
                 accountingAccount: profile?.accounting_account ?? d.accounting_account ?? null
             },
