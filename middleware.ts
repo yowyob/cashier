@@ -13,6 +13,9 @@ export async function middleware(request: NextRequest) {
     if (
         pathname.startsWith("/_next") ||
         pathname.startsWith("/favicon.ico") ||
+        pathname.startsWith("/brand") ||
+        pathname.startsWith("/icon") ||
+        pathname.startsWith("/apple-icon") ||
         pathname.startsWith("/storage") ||
         pathname.startsWith("/api/auth") ||
         pathname.startsWith("/api/public") ||
