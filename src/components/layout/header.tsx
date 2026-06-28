@@ -1,7 +1,7 @@
-import { User } from "lucide-react";
 import { LogoutButton } from "@/components/layout/logout-button";
 import { NotificationsButton } from "@/components/layout/notifications-button";
 import { SettingsButton } from "@/components/layout/settings-button";
+import { UserAvatar } from "@/components/layout/user-avatar";
 
 interface HeaderProps {
     title?: string | null;
@@ -19,9 +19,7 @@ export function Header({ title, showLogout = false, showSettings = false }: Head
                 {showSettings && <SettingsButton />}
                 {showLogout && <LogoutButton />}
                 <NotificationsButton />
-                <div className="h-8 w-8 rounded-full bg-primary flex items-center justify-center text-primary-foreground">
-                    <User className="h-5 w-5" />
-                </div>
+                <UserAvatar size={32} />
             </div>
         </header>
     );
