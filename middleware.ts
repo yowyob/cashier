@@ -16,7 +16,8 @@ export async function middleware(request: NextRequest) {
         pathname.startsWith("/storage") ||
         pathname.startsWith("/api/auth") ||
         pathname.startsWith("/api/public") ||
-        pathname.startsWith("/api/notify-unauthorized")
+        pathname.startsWith("/api/notify-unauthorized") ||
+        pathname === "/welcome"
     ) {
         return NextResponse.next();
     }
@@ -46,7 +47,7 @@ export async function middleware(request: NextRequest) {
     }
 
     if (!sessionCookie) {
-        return NextResponse.redirect(redirectTo("/login"));
+        return NextResponse.redirect(redirectTo("/welcome"));
     }
 
     try {
