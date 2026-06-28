@@ -20,7 +20,7 @@ export async function POST(request: Request) {
         await TelegramService.sendTestMessage({
             chatId,
             token: botToken,
-            message: "Test message from ERP Cashier settings."
+            message: "Test message from KSM Cashier settings."
         });
 
         return NextResponse.json({ ok: true });

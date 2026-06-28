@@ -216,7 +216,8 @@ function LoginPageInner() {
         <div className="flex min-h-screen items-center justify-center bg-muted/50">
             <div className="w-full max-w-md space-y-6 rounded-lg border bg-background p-6 shadow-lg">
                 <div className="space-y-2 text-center">
-                    <h1 className="text-3xl font-bold">Login</h1>
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src="/brand/logo-horizontal.png" alt="KSM Cashier" className="mx-auto h-10 w-auto" />
                     <p className="text-muted-foreground">
                         {step === "login"
                             ? "Enter your email and password"

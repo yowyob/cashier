@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import {
-    Wallet, ArrowRight, ShieldCheck, Zap, BarChart3, Building2,
+    ArrowRight, ShieldCheck, Zap, BarChart3, Building2,
     Receipt, Lock, Users, RefreshCw, Clock, Check, Minus, Star,
 } from "lucide-react";
 import { LoginModal } from "./login-modal";
@@ -45,12 +45,10 @@ export function LandingPage() {
         <div className="min-h-screen bg-background text-foreground">
             <header className="sticky top-0 z-40 border-b border-border bg-background/80 backdrop-blur">
                 <div className="mx-auto flex max-w-6xl items-center justify-between px-5 py-4">
-                    <div className="flex items-center gap-2">
-                        <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-                            <Wallet className="h-5 w-5" />
-                        </span>
-                        <span className="text-lg font-bold">Yowyob Caisse</span>
-                    </div>
+                    <a href="#" className="flex items-center">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img src="/brand/logo-horizontal.png" alt="KSM Cashier" className="h-10 w-auto" />
+                    </a>
                     <nav className="hidden items-center gap-8 text-sm font-medium text-muted-foreground md:flex">
                         <a href="#features" className="transition hover:text-foreground">Fonctionnalités</a>
                         <a href="#benchmark" className="transition hover:text-foreground">Comparatif</a>
@@ -75,8 +73,8 @@ export function LandingPage() {
             <section className="relative overflow-hidden">
                 <div className="mx-auto grid max-w-6xl items-center gap-12 px-5 py-20 md:grid-cols-2 md:py-28">
                     <div className="space-y-6">
-                        <span className="inline-flex items-center gap-1.5 rounded-full border border-border bg-muted px-3 py-1 text-xs font-medium text-muted-foreground">
-                            <ShieldCheck className="h-3.5 w-3.5 text-primary" /> Caisse d'entreprise nouvelle génération
+                        <span className="inline-flex items-center gap-1.5 rounded-full border border-border bg-muted px-3 py-1 text-xs font-semibold uppercase tracking-wider text-primary">
+                            <ShieldCheck className="h-3.5 w-3.5 text-primary" /> Encaisser · Gérer · Piloter
                         </span>
                         <h1 className="text-4xl font-bold leading-tight tracking-tight md:text-5xl">
                             Votre caisse, vos agences, votre trésorerie — <span className="text-primary">au même endroit</span>.
@@ -163,7 +161,7 @@ export function LandingPage() {
                                 <tr className="border-b border-border bg-muted/60">
                                     <th className="p-4 text-left font-semibold">Critère</th>
                                     <th className="p-4 text-center font-bold text-primary">
-                                        <span className="inline-flex items-center gap-1.5"><Star className="h-4 w-4 fill-primary" /> Yowyob Caisse</span>
+                                        <span className="inline-flex items-center gap-1.5"><Star className="h-4 w-4 fill-primary" /> KSM Cashier</span>
                                     </th>
                                     <th className="p-4 text-center font-semibold text-muted-foreground">Odoo POS</th>
                                     <th className="p-4 text-center font-semibold text-muted-foreground">Excel / cahier</th>
@@ -214,8 +212,9 @@ export function LandingPage() {
             <footer className="border-t border-border">
                 <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-3 px-5 py-8 text-sm text-muted-foreground sm:flex-row">
                     <div className="flex items-center gap-2">
-                        <Wallet className="h-4 w-4 text-primary" />
-                        <span className="font-semibold text-foreground">Yowyob Caisse</span>
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img src="/brand/icon.png" alt="" className="h-5 w-auto" />
+                        <span className="font-semibold text-foreground">KSM Cashier</span>
                     </div>
                     <span>© {new Date().getFullYear()} Yowyob. Tous droits réservés.</span>
                 </div>

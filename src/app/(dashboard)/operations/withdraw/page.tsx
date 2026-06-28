@@ -457,7 +457,7 @@ export default function WithdrawPage() {
         doc.text("WITHDRAWAL RECEIPT", pageWidth / 2, y, { align: "center" });
         y += 6;
         doc.setFontSize(9);
-        doc.text("ERP Cashier", pageWidth / 2, y, { align: "center" });
+        doc.text("KSM Cashier", pageWidth / 2, y, { align: "center" });
 
         y += 6;
         doc.setLineWidth(0.3);

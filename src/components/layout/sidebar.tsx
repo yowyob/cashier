@@ -37,9 +37,10 @@ export function Sidebar({ role, roleType, contextLabel, contextName }: SidebarPr
         <div className="flex h-screen w-64 flex-col border-r bg-card text-card-foreground">
             <div className="flex h-16 items-center justify-center border-b px-6">
                 <div className="text-center">
-                    <h1 className="text-xl font-bold tracking-tight">ERP Cashier</h1>
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src="/brand/logo-horizontal.png" alt="KSM Cashier" className="mx-auto h-8 w-auto" />
                     {contextName && (
-                        <p className="text-xs text-muted-foreground">
+                        <p className="mt-1 text-xs text-muted-foreground">
                             {contextLabel ? `${contextLabel}: ` : ""}{contextName}
                         </p>
                     )}

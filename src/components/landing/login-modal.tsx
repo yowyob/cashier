@@ -179,6 +179,8 @@ export function LoginModal({ isOpen, onClose }: { isOpen: boolean; onClose: () =
                 </button>
 
                 <div className="mb-6 space-y-1 text-center">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src="/brand/icon.png" alt="KSM Cashier" className="mx-auto mb-2 h-12 w-auto" />
                     <h2 className="text-2xl font-bold text-foreground">
                         {step === "login" ? "Connexion" : "Votre organisation"}
                     </h2>
