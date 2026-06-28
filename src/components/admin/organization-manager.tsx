@@ -16,6 +16,7 @@ interface Organization {
         user_name: string;
     } | null;
     telegram_bot_token?: string | null;
+    logo_id?: string | null;
 }
 
 interface OrganizationForm {
@@ -215,10 +216,33 @@ function OrganizationEditModal({
     const [draft, setDraft] = useState(organization);
     const [saving, setSaving] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [uploadingLogo, setUploadingLogo] = useState(false);
 
     useEffect(() => {
         setDraft(organization);
     }, [organization]);
+
+    const onPickLogo = async (event: React.ChangeEvent<HTMLInputElement>) => {
+        const file = event.target.files?.[0];
+        if (!file) return;
+        setUploadingLogo(true);
+        setError(null);
+        try {
+            const form = new FormData();
+            form.append("file", file);
+            const upload = await fetch("/api/files", { method: "POST", body: form });
+            const uploaded = await upload.json();
+            if (!upload.ok) throw new Error(uploaded?.error || "Upload échoué");
+            const id = uploaded?.id ?? uploaded?.fileId ?? uploaded?.file_id;
+            if (!id) throw new Error("Identifiant de fichier manquant");
+            setDraft((d) => ({ ...d, logo_id: id }));
+        } catch (e) {
+            setError(e instanceof Error ? e.message : "Upload échoué");
+        } finally {
+            setUploadingLogo(false);
+            event.target.value = "";
+        }
+    };
 
     const saveEdit = async () => {
         setSaving(true);
@@ -232,7 +256,9 @@ function OrganizationEditModal({
                     country: draft.country || undefined,
                     description: draft.description || undefined,
                     is_active: draft.is_active,
-                    telegram_bot_token: draft.telegram_bot_token ?? undefined
+                    telegram_bot_token: draft.telegram_bot_token ?? undefined,
+                    logoId: draft.logo_id ?? undefined,
+                    logo_id: draft.logo_id ?? undefined
                 })
             });
             const body = await res.json();
@@ -254,6 +280,24 @@ function OrganizationEditModal({
                     <button onClick={onClose} className="text-sm text-muted-foreground hover:text-foreground">Close</button>
                 </div>
                 {error && <div className="text-sm text-destructive">{error}</div>}
+                <div className="flex items-center gap-4">
+                    {draft.logo_id ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
+                            src={`/api/files/${draft.logo_id}`}
+                            alt="Logo"
+                            className="h-16 w-16 rounded-md object-cover border"
+                        />
+                    ) : (
+                        <div className="h-16 w-16 rounded-md border bg-muted flex items-center justify-center text-xs text-muted-foreground">
+                            Logo
+                        </div>
+                    )}
+                    <label className="inline-flex items-center justify-center rounded-md border px-3 py-2 text-sm cursor-pointer hover:bg-muted">
+                        {uploadingLogo ? "Envoi…" : "Changer le logo"}
+                        <input type="file" accept="image/*" className="hidden" onChange={onPickLogo} disabled={uploadingLogo} />
+                    </label>
+                </div>
                 <label className="text-sm font-medium">
                     Name
                     <input
@@ -451,7 +495,21 @@ export function OrganizationManager({
                         ) : (
                             pagedOrganizations.map((organization) => (
                                 <tr key={organization.id} className="border-b">
-                                    <td className="p-2 font-medium">{organization.name}</td>
+                                    <td className="p-2 font-medium">
+                                        <div className="flex items-center gap-2">
+                                            {organization.logo_id ? (
+                                                // eslint-disable-next-line @next/next/no-img-element
+                                                <img
+                                                    src={`/api/files/${organization.logo_id}`}
+                                                    alt=""
+                                                    className="h-7 w-7 rounded object-cover border"
+                                                />
+                                            ) : (
+                                                <div className="h-7 w-7 rounded bg-muted border" />
+                                            )}
+                                            <span>{organization.name}</span>
+                                        </div>
+                                    </td>
                                     <td className="p-2 text-muted-foreground">{organization.country || "-"}</td>
                                     <td className="p-2 text-muted-foreground">
                                         {organization.creator ? `${organization.creator.user_first_name} (${organization.creator.user_name})` : "-"}
