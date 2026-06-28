@@ -2,7 +2,14 @@
 // détient la clé client kernel) — ne JAMAIS l'importer depuis un composant client.
 import { getSession } from "@/lib/auth";
 
-type BackendTarget = "cashier" | "gestion";
+// IMPORTANT : il n'y a qu'UN SEUL backend, le kernel-core. La cible n'est PAS un second
+// serveur — c'est juste la surface d'API visée sur le même kernel :
+//   - "cashier" : endpoints /api/... (caisse, fichiers, auth, users) ;
+//   - "tiers"   : endpoints de gestion des tiers (organisations, agences, clients),
+//                 historiquement servis par un service "gestion-tiers" séparé, désormais
+//                 servis par le kernel — d'où une compat de chemins (rewriteTiersPath).
+// En prod les deux URLs pointent sur le même conteneur kernel (isSingleBackend() == true).
+type BackendTarget = "cashier" | "tiers";
 
 const CASHIER_BACKEND_URL =
     process.env.ERP_CASHIER_BACKEND_URL ||
@@ -66,7 +73,7 @@ const CASHIER_PREFIXES = [
     "/api/users/profile"
 ];
 
-const GESTION_EXACT_PATH_REWRITES: Record<string, string> = {
+const TIERS_EXACT_PATH_REWRITES: Record<string, string> = {
     "/api/organizations/current": "/organizations/my"
 };
 
@@ -74,16 +81,16 @@ function normalizeBaseUrl(baseUrl: string) {
     return baseUrl.endsWith("/") ? baseUrl.slice(0, -1) : baseUrl;
 }
 
-// Déploiement B2B strict : quand la cible gestion-tiers EST le même backend que la caisse
-// (un seul BFF passerelle), on NE strippe PAS le préfixe /api — le BFF et iwm exposent /api/...
+// Déploiement B2B strict : quand l'URL "tiers" EST le même backend que la caisse
+// (un seul kernel passerelle), on NE strippe PAS le préfixe /api — le kernel expose /api/...
 function isSingleBackend() {
     return normalizeBaseUrl(GESTION_TIERS_BACKEND_URL) === normalizeBaseUrl(CASHIER_BACKEND_URL);
 }
 
-function rewriteGestionPath(path: string) {
+function rewriteTiersPath(path: string) {
     const parsed = new URL(path.startsWith("/") ? path : `/${path}`, "http://local");
     const singleBackend = isSingleBackend();
-    const exact = GESTION_EXACT_PATH_REWRITES[parsed.pathname];
+    const exact = TIERS_EXACT_PATH_REWRITES[parsed.pathname];
     if (exact) {
         // exact = "/organizations/my" (endpoint racine du backend gestion-tiers dédié).
         // En mode mono-BFF, on conserve le préfixe /api (le BFF relaie /api/organizations/my → iwm).
@@ -120,7 +127,7 @@ export function resolveBackendTarget(path: string): BackendTarget {
     if (CASHIER_PREFIXES.some((prefix) => normalizedPath.startsWith(prefix))) {
         return "cashier";
     }
-    return "gestion";
+    return "tiers";
 }
 
 export function buildBackendUrl(path: string, target?: BackendTarget) {
@@ -128,7 +135,7 @@ export function buildBackendUrl(path: string, target?: BackendTarget) {
     const resolvedTarget = target || resolveBackendTarget(normalizedPath);
     const baseUrl = resolvedTarget === "cashier" ? CASHIER_BACKEND_URL : GESTION_TIERS_BACKEND_URL;
     const rewrittenPath =
-        resolvedTarget === "gestion" ? rewriteGestionPath(normalizedPath) : normalizedPath;
+        resolvedTarget === "tiers" ? rewriteTiersPath(normalizedPath) : normalizedPath;
     return `${normalizeBaseUrl(baseUrl)}${rewrittenPath}`;
 }
 

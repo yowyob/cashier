@@ -68,7 +68,7 @@ export async function GET(request: Request) {
             headers: {
                 "X-Tenant-ID": organizationId
             }
-        }, "gestion");
+        }, "tiers");
         const body = await readBackendJson(backendResponse);
         if (!backendResponse.ok) {
             return NextResponse.json(

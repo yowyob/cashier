@@ -9,7 +9,7 @@ export async function GET() {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         }
 
-        const backendResponse = await fetchBackend("/organizations/my", { cache: "no-store" }, "gestion");
+        const backendResponse = await fetchBackend("/organizations/my", { cache: "no-store" }, "tiers");
         const body = await readBackendJson(backendResponse);
         if (!backendResponse.ok) {
             return NextResponse.json(
@@ -37,7 +37,7 @@ export async function POST(request: Request) {
             method: "POST",
             headers: { "Content-Type": contentType },
             body: bodyText
-        }, "gestion");
+        }, "tiers");
         const body = await readBackendJson(backendResponse);
         if (!backendResponse.ok) {
             return NextResponse.json(

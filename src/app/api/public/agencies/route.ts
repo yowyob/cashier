@@ -6,7 +6,7 @@ export async function GET(request: Request) {
         const { searchParams } = new URL(request.url);
         const organizationId = searchParams.get("organizationId");
 
-        const backendResponse = await fetchBackend("/agencies", { cache: "no-store" }, "gestion");
+        const backendResponse = await fetchBackend("/agencies", { cache: "no-store" }, "tiers");
         const body = await readBackendJson(backendResponse);
         if (!backendResponse.ok) {
             return NextResponse.json(

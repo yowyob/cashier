@@ -3,7 +3,7 @@ import { fetchBackend, readBackendJson } from "@/lib/backend";
 
 export async function GET() {
     try {
-        const backendResponse = await fetchBackend("/organizations/my", { cache: "no-store" }, "gestion");
+        const backendResponse = await fetchBackend("/organizations/my", { cache: "no-store" }, "tiers");
         const body = await readBackendJson(backendResponse);
         if (!backendResponse.ok) {
             return NextResponse.json(

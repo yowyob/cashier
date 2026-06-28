@@ -19,7 +19,7 @@ export async function PUT(
             method: "PATCH",
             headers: { "Content-Type": contentType },
             body: bodyText
-        }, "gestion");
+        }, "tiers");
         const body = await readBackendJson(backendResponse);
 
         if (!backendResponse.ok) {
