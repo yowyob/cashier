@@ -1,7 +1,9 @@
 import { NextResponse } from "next/server";
-import { TelegramService } from "@/services/telegram.service";
 import { getSession } from "@/lib/auth";
+import { fetchBackend, readBackendJson } from "@/lib/backend";
 
+// Le test de notification passe désormais par notification-core (via le kernel),
+// et non plus par un envoi Telegram direct.
 export async function POST(request: Request) {
     try {
         const session = await getSession();
@@ -10,21 +12,35 @@ export async function POST(request: Request) {
         }
 
         const body = await request.json().catch(() => ({}));
-        const chatId = typeof body.chat_id === "string" ? body.chat_id.trim() : "";
-        const botToken = typeof body.bot_token === "string" ? body.bot_token.trim() : "";
+        const channel = typeof body.channel === "string" && body.channel.trim() ? body.channel.trim() : "EMAIL";
+        const recipient = typeof body.recipient === "string" ? body.recipient.trim() : "";
+        const subject = typeof body.subject === "string" && body.subject.trim()
+            ? body.subject.trim()
+            : "Test KSM Cashier";
 
-        if (!chatId || !botToken) {
-            return NextResponse.json({ error: "chat_id and bot_token are required." }, { status: 400 });
+        if (!recipient) {
+            return NextResponse.json({ error: "recipient is required." }, { status: 400 });
         }
 
-        await TelegramService.sendTestMessage({
-            chatId,
-            token: botToken,
-            message: "Test message from KSM Cashier settings."
-        });
+        const backendResponse = await fetchBackend(
+            "/api/cashier/notifications/test",
+            {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ channel, subject, recipient })
+            },
+            "cashier"
+        );
+        const payload = await readBackendJson(backendResponse);
+        if (!backendResponse.ok) {
+            return NextResponse.json(
+                { error: payload?.error || "Failed to send test notification." },
+                { status: backendResponse.status }
+            );
+        }
 
-        return NextResponse.json({ ok: true });
+        return NextResponse.json(payload?.data ?? payload ?? { ok: true });
     } catch (error: any) {
-        return NextResponse.json({ error: error.message }, { status: 500 });
+        return NextResponse.json({ error: error?.message || "Failed to send test notification." }, { status: 500 });
     }
 }
