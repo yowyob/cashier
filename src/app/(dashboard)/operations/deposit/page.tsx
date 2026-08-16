@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { Search } from "lucide-react";
 import { TicketingInput } from "@/components/cashier/ticketing-input";
+import ProductCart from "@/components/cashier/product-cart";
 import { format } from "date-fns";
 import jsPDF from "jspdf";
 import { TablePagination } from "@/components/ui/table-pagination";
@@ -676,6 +677,13 @@ export default function DepositPage() {
                 {/* Deposit Form */}
                 {selectedAccount && (
                     <form onSubmit={handleDeposit} className="space-y-4">
+                        <ProductCart
+                            onApply={(cartTotal, summary) => {
+                                if (cartTotal > 0) setAmount(String(cartTotal));
+                                if (summary) setReason(summary);
+                                setHasDownloadedReceipt(false);
+                            }}
+                        />
                         <div>
                             <label className="text-sm font-medium mb-2 block">Amount (XAF)</label>
                         <input

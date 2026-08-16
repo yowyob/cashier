@@ -70,7 +70,9 @@ const CASHIER_PREFIXES = [
     "/api/audit",
     "/api/notify-unauthorized",
     "/api/v1/accounting",
-    "/api/users/profile"
+    "/api/users/profile",
+    // Catalogue produit servi par le modèle KSM riche A (product_core) du kernel.
+    "/api/product-core"
 ];
 
 const TIERS_EXACT_PATH_REWRITES: Record<string, string> = {
