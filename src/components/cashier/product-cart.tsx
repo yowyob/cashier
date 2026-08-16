@@ -19,16 +19,20 @@ type CartLine = { product: CatalogProduct; qty: number };
  * puis le pousse dans le montant + le motif itemisé de l'opération d'encaissement.
  */
 export default function ProductCart({
-    onApply
+    onApply,
+    defaultOpen = false,
+    applyLabel = "Appliquer au montant"
 }: {
     onApply: (total: number, summary: string) => void;
+    defaultOpen?: boolean;
+    applyLabel?: string;
 }) {
     const [products, setProducts] = useState<CatalogProduct[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [query, setQuery] = useState("");
     const [cart, setCart] = useState<Record<string, CartLine>>({});
-    const [open, setOpen] = useState(false);
+    const [open, setOpen] = useState(defaultOpen);
 
     useEffect(() => {
         let alive = true;
@@ -177,7 +181,7 @@ export default function ProductCart({
                                     onClick={apply}
                                     className="inline-flex h-9 flex-1 items-center justify-center rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground hover:bg-primary/90"
                                 >
-                                    Appliquer au montant
+                                    {applyLabel}
                                 </button>
                                 <button
                                     type="button"

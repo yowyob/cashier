@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { LayoutDashboard, Users, Monitor, LogOut, History, ClipboardList, ArrowRightLeft, FileText, UserCircle, CreditCard, Scale, Wallet, Download, ArrowLeftRight, ArrowDownToLine, Shield } from "lucide-react";
+import { LayoutDashboard, Users, Monitor, LogOut, History, ClipboardList, ArrowRightLeft, FileText, UserCircle, CreditCard, Scale, Wallet, Download, ArrowLeftRight, ArrowDownToLine, Shield, ShoppingCart } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const navigation = [
@@ -66,6 +66,16 @@ export function Sidebar({ role, roleType, contextLabel, contextName }: SidebarPr
                     {role === 'cashier' && (
                     <div className="pt-4 pb-2">
                         <h4 className="mb-1 rounded-md px-2 py-1 text-sm font-semibold text-muted-foreground">Operations</h4>
+                        <Link
+                            href="/operations/sale"
+                            className={cn(
+                                "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground",
+                                pathname === "/operations/sale" ? "bg-accent text-accent-foreground" : "text-muted-foreground"
+                            )}
+                        >
+                            <ShoppingCart className="h-4 w-4" />
+                            Vente
+                        </Link>
                         <Link
                             href="/operations/deposit"
                             className={cn(
