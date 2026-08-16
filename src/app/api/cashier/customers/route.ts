@@ -9,9 +9,16 @@ export async function GET() {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         }
 
-        const backendResponse = await fetchBackend("/api/cashier/customers", {
-            cache: "no-store"
-        });
+        const organizationId = (session as any).user?.organizationId || (session as any).organization?.id || null;
+        if (!organizationId) {
+            return NextResponse.json([]);
+        }
+        // Clients servis par le kernel sous /api/customers (tp-core) — /api/cashier/customers n'existe pas.
+        const backendResponse = await fetchBackend(
+            `/api/customers?organizationId=${encodeURIComponent(String(organizationId))}`,
+            { cache: "no-store" },
+            "tiers"
+        );
         const body = await readBackendJson(backendResponse);
 
         if (!backendResponse.ok) {

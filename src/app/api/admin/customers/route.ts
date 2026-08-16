@@ -74,6 +74,7 @@ export async function POST(request: Request) {
             country: normalizeString(body.country),
             description: normalizeString(body.profession),
             bankAccountNumber: normalizeString(body.account_number),
+            organizationId,
             active: true
         };
 
@@ -81,7 +82,8 @@ export async function POST(request: Request) {
             return NextResponse.json({ error: "user_first_name is required" }, { status: 400 });
         }
 
-        const backendResponse = await fetchBackend("/api/v1/customers", {
+        // Clients = /api/customers (tp-core) ; /api/v1/customers n'existe pas côté kernel.
+        const backendResponse = await fetchBackend("/api/customers", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
@@ -120,12 +122,16 @@ export async function GET(request: Request) {
             return NextResponse.json({ error: "Missing organization scope." }, { status: 400 });
         }
 
-        const backendResponse = await fetchBackend("/api/v1/customers", {
-            cache: "no-store",
-            headers: {
-                "X-Tenant-ID": organizationId
-            }
-        }, "tiers");
+        const backendResponse = await fetchBackend(
+            `/api/customers?organizationId=${encodeURIComponent(String(organizationId))}`,
+            {
+                cache: "no-store",
+                headers: {
+                    "X-Tenant-ID": organizationId
+                }
+            },
+            "tiers"
+        );
         const raw = await readBackendJson(backendResponse);
 
         if (!backendResponse.ok) {

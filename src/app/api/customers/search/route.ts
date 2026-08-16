@@ -63,12 +63,18 @@ export async function GET(request: Request) {
             return NextResponse.json({ error: "Missing organization scope." }, { status: 400 });
         }
 
-        const backendResponse = await fetchBackend("/api/v1/customers", {
-            cache: "no-store",
-            headers: {
-                "X-Tenant-ID": organizationId
-            }
-        }, "tiers");
+        // Clients = tp-core du kernel : GET /api/customers?organizationId=... (le chemin /api/v1/customers
+        // n'existe pas côté kernel). On récupère la liste de l'org puis on filtre par requête côté BFF.
+        const backendResponse = await fetchBackend(
+            `/api/customers?organizationId=${encodeURIComponent(String(organizationId))}`,
+            {
+                cache: "no-store",
+                headers: {
+                    "X-Tenant-ID": organizationId
+                }
+            },
+            "tiers"
+        );
         const body = await readBackendJson(backendResponse);
         if (!backendResponse.ok) {
             return NextResponse.json(
