@@ -40,6 +40,10 @@ function Cell({ value }: { value: boolean | "partial" }) {
 
 export function LandingPage() {
     const [loginOpen, setLoginOpen] = useState(false);
+    const openSignup = () => {
+        const popup = window.open(SIGNUP_URL, "yowyob-yowauth-signup", "popup=yes,width=480,height=760,resizable=yes,scrollbars=yes");
+        if (!popup) window.location.assign(SIGNUP_URL);
+    };
 
     return (
         <div className="min-h-screen bg-background text-foreground">
@@ -60,12 +64,13 @@ export function LandingPage() {
                         >
                             Connexion
                         </button>
-                        <a
-                            href={SIGNUP_URL}
+                        <button
+                            type="button"
+                            onClick={openSignup}
                             className="inline-flex h-10 items-center gap-1.5 rounded-lg bg-primary px-4 text-sm font-semibold text-primary-foreground transition hover:bg-primary/90"
                         >
                             Inscription <ArrowRight className="h-4 w-4" />
-                        </a>
+                        </button>
                     </div>
                 </div>
             </header>
@@ -89,12 +94,13 @@ export function LandingPage() {
                             >
                                 Accéder à ma caisse <ArrowRight className="h-4 w-4" />
                             </button>
-                            <a
-                                href={SIGNUP_URL}
+                            <button
+                                type="button"
+                                onClick={openSignup}
                                 className="inline-flex h-12 items-center rounded-lg border border-border px-6 text-sm font-semibold transition hover:bg-muted"
                             >
                                 Créer un compte
-                            </a>
+                            </button>
                         </div>
                         <div className="flex items-center gap-6 pt-2 text-sm text-muted-foreground">
                             <span className="flex items-center gap-1.5"><Clock className="h-4 w-4 text-primary" /> Mise en route &lt; 1 jour</span>
@@ -199,12 +205,13 @@ export function LandingPage() {
                         >
                             Se connecter <ArrowRight className="h-4 w-4" />
                         </button>
-                        <a
-                            href={SIGNUP_URL}
+                        <button
+                            type="button"
+                            onClick={openSignup}
                             className="inline-flex h-12 items-center rounded-lg border border-primary-foreground/30 px-6 text-sm font-semibold transition hover:bg-primary-foreground/10"
                         >
                             Créer un compte
-                        </a>
+                        </button>
                     </div>
                 </div>
             </section>
