@@ -7,7 +7,7 @@ import {
 } from "lucide-react";
 import { LoginModal } from "./login-modal";
 
-const SIGNUP_URL = process.env.NEXT_PUBLIC_SIGNUP_URL || "#";
+const SIGNUP_URL = process.env.NEXT_PUBLIC_YOWAUTH_URL || process.env.NEXT_PUBLIC_SIGNUP_URL || "https://yowauth.yowyob.com/login?mode=signup";
 
 const FEATURES = [
     { icon: Receipt, title: "Encaissements unifiés", desc: "Dépôts, retraits, transferts P2P et paiements de factures depuis une seule interface, sans ressaisie." },
