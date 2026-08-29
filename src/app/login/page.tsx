@@ -30,6 +30,12 @@ type LoginResponse = {
     organizations?: OrganizationMembership[];
 };
 
+type OrganizationGroup = {
+    id: string;
+    name: string;
+    memberships: OrganizationMembership[];
+};
+
 const ROLE_REDIRECTS: Record<string, string> = {
     ROLE_ORG_ADMIN: "/",
     ROLE_ADMIN: "/",
@@ -76,32 +82,30 @@ function LoginPageInner() {
     const [loginUser, setLoginUser] = useState<LoginResponse["user"] | null>(null);
 
     const [organizations, setOrganizations] = useState<OrganizationMembership[]>([]);
-    const [selectedOrganizationKey, setSelectedOrganizationKey] = useState("");
+    const [selectedOrganizationId, setSelectedOrganizationId] = useState("");
     const [selectionLoading, setSelectionLoading] = useState(false);
     const [selectionError, setSelectionError] = useState<string | null>(null);
 
-    const selectedOrganization = useMemo(() => {
-        if (!selectedOrganizationKey) return null;
-        const index = Number(selectedOrganizationKey);
-        if (!Number.isFinite(index)) return null;
-        return organizations[index] || null;
-    }, [organizations, selectedOrganizationKey]);
+    const organizationGroups = useMemo<OrganizationGroup[]>(() => {
+        const groups = new Map<string, OrganizationGroup>();
+        for (const membership of organizations) {
+            const current = groups.get(membership.organization_id);
+            if (current) current.memberships.push(membership);
+            else groups.set(membership.organization_id, {
+                id: membership.organization_id,
+                name: membership.organization_name || "Organisation",
+                memberships: [membership],
+            });
+        }
+        return Array.from(groups.values());
+    }, [organizations]);
+
+    const selectedGroup = useMemo(
+        () => organizationGroups.find((group) => group.id === selectedOrganizationId) ?? null,
+        [organizationGroups, selectedOrganizationId]
+    );
 
     const canSubmitLogin = email.trim().length > 0 && password.length > 0;
-    const canSubmitSelection = Boolean(selectedOrganizationKey);
-
-    const formatOrganizationLabel = (org: OrganizationMembership) => {
-        const details = [org.organization_name];
-        if (org.agency_name) {
-            details.push(`Agency: ${org.agency_name}`);
-        }
-        const roleName = resolveRoleName(org.role_name, loginUser);
-        if (roleName) {
-            details.push(roleName);
-        }
-        return details.join(" - ");
-    };
-
     async function continueWithOrganization(org: OrganizationMembership) {
         setSelectionLoading(true);
         setSelectionError(null);
@@ -150,8 +154,8 @@ function LoginPageInner() {
             }
 
             window.location.href = resolveRedirectPath(effectiveRoleName);
-        } catch (error: any) {
-            setSelectionError(error?.message || "Failed to continue.");
+        } catch (error: unknown) {
+            setSelectionError(error instanceof Error ? error.message : "Failed to continue.");
         } finally {
             setSelectionLoading(false);
         }
@@ -190,26 +194,18 @@ function LoginPageInner() {
             setLoginUser(data.user || null);
             const orgs = data.organizations || [];
             setOrganizations(orgs);
-            setSelectedOrganizationKey(orgs.length === 1 ? "0" : "");
-            setStep("organization");
-
+            const uniqueOrganizationIds = Array.from(new Set(orgs.map((org) => org.organization_id)));
             if (orgs.length === 1) {
                 await continueWithOrganization(orgs[0]);
+            } else {
+                setSelectedOrganizationId(uniqueOrganizationIds.length === 1 ? uniqueOrganizationIds[0] : "");
+                setStep("organization");
             }
-        } catch (_e: any) {
+        } catch {
             setLoginError("Invalid credentials");
         } finally {
             setLoginLoading(false);
         }
-    }
-
-    async function onSubmitOrganization(event: React.FormEvent<HTMLFormElement>) {
-        event.preventDefault();
-        if (!selectedOrganization) {
-            setSelectionError("Select an organization.");
-            return;
-        }
-        await continueWithOrganization(selectedOrganization);
     }
 
     return (
@@ -275,56 +271,74 @@ function LoginPageInner() {
 
 
                 {step === "organization" && (
-                    <form onSubmit={onSubmitOrganization} className="space-y-4">
+                    <div className="space-y-4">
                         {organizations.length === 0 ? (
                             <div className="rounded-md border p-4 text-sm text-muted-foreground">
-                                No organizations available for this account.
+                                Aucune organisation disponible pour ce compte.
+                            </div>
+                        ) : selectedGroup && selectedGroup.memberships.length > 1 ? (
+                            <div className="space-y-3">
+                                <button type="button" onClick={() => setSelectedOrganizationId("")}
+                                    className="text-sm font-medium text-muted-foreground hover:text-foreground">
+                                    ← Changer d’organisation
+                                </button>
+                                <h2 className="font-semibold">{selectedGroup.name}</h2>
+                                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                                    {selectedGroup.memberships.map((membership, index) => (
+                                        <button
+                                            key={`${membership.organization_id}-${membership.agency_id || "org"}-${index}`}
+                                            type="button"
+                                            disabled={selectionLoading}
+                                            onClick={() => void continueWithOrganization(membership)}
+                                            className="min-h-24 rounded-xl border bg-card p-4 text-left transition-colors hover:border-primary hover:bg-muted/40 disabled:opacity-60"
+                                        >
+                                            <strong className="block">{membership.agency_name || "Périmètre organisation"}</strong>
+                                            <span className="mt-1 block text-xs text-muted-foreground">{resolveRoleName(membership.role_name, loginUser) || "Accès caisse"}</span>
+                                        </button>
+                                    ))}
+                                </div>
                             </div>
                         ) : (
-                            <div className="space-y-2">
-                                <label htmlFor="organization" className="text-sm font-medium">Organization</label>
-                                <select
-                                    id="organization"
-                                    name="organization"
-                                    value={selectedOrganizationKey}
-                                    onChange={(e) => setSelectedOrganizationKey(e.target.value)}
-                                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                                >
-                                    <option value="">Select organization</option>
-                                    {organizations.map((org, index) => (
-                                        <option
-                                            key={`${org.organization_id}-${org.agency_id || "org"}-${org.role_name || "role"}-${index}`}
-                                            value={String(index)}
-                                        >
-                                            {formatOrganizationLabel(org)}
-                                        </option>
-                                    ))}
-                                </select>
+                            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                                {organizationGroups.map((group) => (
+                                    <button
+                                        key={group.id}
+                                        type="button"
+                                        disabled={selectionLoading}
+                                        onClick={() => {
+                                            if (group.memberships.length === 1) void continueWithOrganization(group.memberships[0]);
+                                            else setSelectedOrganizationId(group.id);
+                                        }}
+                                        className="min-h-28 rounded-xl border bg-card p-4 text-left transition-colors hover:border-primary hover:bg-muted/40 disabled:opacity-60"
+                                    >
+                                        <strong className="block">{group.name}</strong>
+                                        <span className="mt-1 block text-xs text-muted-foreground">
+                                            {group.memberships.length > 1 ? `${group.memberships.length} agences ou rôles` : "Ouvrir la caisse"}
+                                        </span>
+                                    </button>
+                                ))}
                             </div>
                         )}
 
-                        <div className="flex items-center gap-2">
+                        <div className="flex flex-col gap-2 sm:flex-row">
                             <button
                                 type="button"
                                 onClick={() => {
                                     setStep("login");
                                     setOrganizations([]);
-                                    setSelectedOrganizationKey("");
+                                    setSelectedOrganizationId("");
                                     setSelectionError(null);
                                 }}
                                 className="inline-flex h-10 flex-1 items-center justify-center rounded-md border px-4 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted/40"
                             >
-                                Back
+                                Retour
                             </button>
-                            <button
-                                type="submit"
-                                disabled={selectionLoading || !canSubmitSelection}
-                                className="inline-flex h-10 flex-1 items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground ring-offset-background transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50"
-                            >
-                                {selectionLoading ? "Loading..." : "Continue"}
-                            </button>
+                            <a href="https://ksm.yowyob.com"
+                                className="inline-flex h-10 flex-1 items-center justify-center rounded-md border border-primary px-4 py-2 text-sm font-medium text-primary hover:bg-primary/5">
+                                Créer une organisation dans KSM
+                            </a>
                         </div>
-                    </form>
+                    </div>
                 )}
             </div>
         </div>
