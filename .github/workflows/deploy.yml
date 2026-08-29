@@ -1,17 +1,9 @@
 name: Deploy (server)
 
-# Déploiement du front caisse sur le serveur yowyob.
-# S'enchaîne APRÈS la publication GHCR (workflow "Publish Docker image (GHCR)") :
-# on ne déploie que si l'image du commit a bien été poussée sur GHCR.
-# Le serveur ne reçoit AUCUN code source : seulement docker-compose.prod.yml,
-# puis `docker compose pull && up` de l'image GHCR (source de vérité = ce dépôt).
-# Le .env (AUTH_SECRET, KERNEL_CLIENT_SECRET, ERP_TENANT_ID) reste géré UNIQUEMENT sur le serveur.
-
 on:
   workflow_run:
     workflows: ["Publish Docker image (GHCR)"]
     types: [completed]
-    branches: [main]
   workflow_dispatch:
 
 concurrency:
@@ -20,47 +12,54 @@ concurrency:
 
 jobs:
   deploy:
-    name: Deploy to server
+    name: Deploy through server agent
     runs-on: ubuntu-latest
     timeout-minutes: 15
     if: ${{ github.repository == 'yowyob/cashier' && (github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success') }}
+    env:
+      AGENT: https://kernel-core.yowyob.com/_agent
+      SERVICE: cashier
     steps:
-      - name: Checkout (pour docker-compose.prod.yml)
-        uses: actions/checkout@v4
-        with:
-          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
-
-      - name: Calculer le tag d'image immuable (GHCR, par SHA)
-        id: img
-        run: |
-          SHA="${{ github.event.workflow_run.head_sha || github.sha }}"
-          REPO="${GITHUB_REPOSITORY,,}"          # owner/repo en minuscules
-          echo "image=ghcr.io/${REPO}:sha-${SHA:0:7}" >> "$GITHUB_OUTPUT"
-
-      - name: Préparer la clé SSH
-        run: |
-          mkdir -p ~/.ssh && chmod 700 ~/.ssh
-          echo "${{ secrets.DEPLOY_SSH_KEY }}" > ~/.ssh/id_deploy
-          chmod 600 ~/.ssh/id_deploy
-          ssh-keyscan -H "${{ vars.DEPLOY_HOST }}" >> ~/.ssh/known_hosts 2>/dev/null
-
-      - name: Copier le docker-compose.prod.yml
-        run: |
-          scp -i ~/.ssh/id_deploy docker-compose.prod.yml \
-            "${{ vars.DEPLOY_USER }}@${{ vars.DEPLOY_HOST }}:${{ vars.CASHIER_FRONT_DIR }}/docker-compose.prod.yml"
-
-      - name: Pull + up sur le serveur
+      - name: Request immutable deployment
         env:
-          CASHIER_FRONTEND_IMAGE: ${{ steps.img.outputs.image }}
+          AGENT_TOKEN: ${{ secrets.AGENT_TOKEN }}
         run: |
-          ssh -i ~/.ssh/id_deploy "${{ vars.DEPLOY_USER }}@${{ vars.DEPLOY_HOST }}" "
-            set -e
-            cd '${{ vars.CASHIER_FRONT_DIR }}'
-            # Le serveur dispose déjà d'une auth GHCR persistante (read:packages sur l'org yowyob).
-            export CASHIER_FRONTEND_IMAGE='${CASHIER_FRONTEND_IMAGE}'
-            # .env (secrets runtime) géré UNIQUEMENT sur le serveur, jamais écrasé.
-            docker compose -f docker-compose.prod.yml pull
-            docker compose -f docker-compose.prod.yml up -d
-            docker compose -f docker-compose.prod.yml ps
-            docker image prune -f
-          "
+          set -euo pipefail
+          response=$(curl -sS --fail-with-body --max-time 60 \
+            -X POST -H "Authorization: Bearer $AGENT_TOKEN" \
+            "$AGENT/deploy/$SERVICE")
+          echo "$response"
+          echo "$response" | grep -q '"accepted": *true'
+
+      - name: Confirm actual deployment result
+        env:
+          AGENT_TOKEN: ${{ secrets.AGENT_TOKEN }}
+        run: |
+          set -euo pipefail
+          for attempt in $(seq 1 40); do
+            status=$(curl -sS --max-time 20 \
+              -H "Authorization: Bearer $AGENT_TOKEN" \
+              "$AGENT/deployments" \
+              | jq -r --arg service "$SERVICE" \
+                '[.[] | select(.service == $service)] | .[0].status // "none"')
+            if [ "$status" = "success" ]; then
+              echo "Deployment confirmed by agent."
+              exit 0
+            fi
+            if [ "$status" = "failed" ] || [ "$status" = "error" ]; then
+              echo "Deployment agent reported a failure." >&2
+              exit 1
+            fi
+            echo "attempt $attempt: $status"
+            sleep 15
+          done
+          echo "Deployment outcome was not confirmed in time." >&2
+          exit 1
+
+      - name: Verify public service
+        run: |
+          set -euo pipefail
+          code=$(curl -s -o /dev/null -w '%{http_code}' --max-time 25 \
+            https://cashier.yowyob.com/ || echo 000)
+          echo "https://cashier.yowyob.com/ returned $code"
+          [ "$code" = "200" ]
