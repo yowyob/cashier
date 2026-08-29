@@ -60,6 +60,6 @@ jobs:
         run: |
           set -euo pipefail
           code=$(curl -s -o /dev/null -w '%{http_code}' --max-time 25 \
-            https://cashier.yowyob.com/ || echo 000)
-          echo "https://cashier.yowyob.com/ returned $code"
+            https://cashier.yowyob.com/login || echo 000)
+          echo "https://cashier.yowyob.com/login returned $code"
           [ "$code" = "200" ]
