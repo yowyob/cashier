@@ -7,7 +7,14 @@ import {
 } from "lucide-react";
 import { LoginModal } from "./login-modal";
 
-const SIGNUP_URL = process.env.NEXT_PUBLIC_YOWAUTH_URL || process.env.NEXT_PUBLIC_SIGNUP_URL || "https://yowauth.yowyob.com/login?mode=signup";
+const YOWAUTH_URL = process.env.NEXT_PUBLIC_YOWAUTH_URL || process.env.NEXT_PUBLIC_SIGNUP_URL || "https://yowauth.yowyob.com";
+
+function signupUrl() {
+    const url = new URL(YOWAUTH_URL);
+    if (url.pathname === "/") url.pathname = "/login";
+    url.searchParams.set("mode", "signup");
+    return url.toString();
+}
 
 const FEATURES = [
     { icon: Receipt, title: "Encaissements unifiés", desc: "Dépôts, retraits, transferts P2P et paiements de factures depuis une seule interface, sans ressaisie." },
@@ -41,8 +48,9 @@ function Cell({ value }: { value: boolean | "partial" }) {
 export function LandingPage() {
     const [loginOpen, setLoginOpen] = useState(false);
     const openSignup = () => {
-        const popup = window.open(SIGNUP_URL, "yowyob-yowauth-signup", "popup=yes,width=480,height=760,resizable=yes,scrollbars=yes");
-        if (!popup) window.location.assign(SIGNUP_URL);
+        const url = signupUrl();
+        const popup = window.open(url, "yowyob-yowauth-signup", "popup=yes,width=480,height=760,resizable=yes,scrollbars=yes");
+        if (!popup) window.location.assign(url);
     };
 
     return (
