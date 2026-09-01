@@ -142,8 +142,8 @@ export async function POST(request: Request) {
         });
 
         return response;
-    } catch (error: any) {
-        const message = error?.message || "Failed to select organization.";
+    } catch {
+        const message = "Erreur de connexion";
         return expectsJson
             ? NextResponse.json({ error: message }, { status: 500 })
             : redirectWithError(message, 303);
