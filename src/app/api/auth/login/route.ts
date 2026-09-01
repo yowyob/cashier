@@ -194,8 +194,8 @@ export async function POST(request: Request) {
         });
 
         return response;
-    } catch (error: any) {
-        const message = error?.message || "Login error. Please try again.";
+    } catch {
+        const message = "Erreur de connexion";
         return expectsJson
             ? NextResponse.json({ error: message }, { status: 500 })
             : redirectWithError("Login error. Please try again.", 303);

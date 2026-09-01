@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import { cn } from "@/lib/utils";
 import { ErrorReporter } from "@/components/layout/error-reporter";
+import { NetworkStatus } from "@/components/layout/network-status";
 
 // const inter = Inter({ subsets: ["latin"] });
 
@@ -17,9 +18,10 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="fr">
       <body className={cn("min-h-screen bg-background font-sans antialiased")}>
         <ErrorReporter />
+        <NetworkStatus />
         {children}
       </body>
     </html>

@@ -143,9 +143,14 @@ export function buildBackendUrl(path: string, target?: BackendTarget) {
 
 export async function fetchBackend(path: string, options: RequestInit = {}, target?: BackendTarget) {
     const headers = await kernelAuthHeaders(new Headers(options.headers || {}));
-    const response = await fetch(buildBackendUrl(path, target), { ...options, headers });
-    observeQuota(path, response);
-    return response;
+    try {
+        const response = await fetch(buildBackendUrl(path, target), { ...options, headers });
+        observeQuota(path, response);
+        return response;
+    } catch {
+        // Ne jamais exposer les détails réseau internes (DNS, socket, undici, etc.) à l'UI.
+        throw new Error("Erreur de connexion");
+    }
 }
 
 /**
