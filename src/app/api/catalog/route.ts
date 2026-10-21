@@ -2,8 +2,10 @@ import { NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
 import { fetchBackend, readBackendJson } from "@/lib/backend";
 
-// Catalogue produit de la caisse : lecture DIRECTE du modèle KSM riche A (product_core)
-// du kernel via /api/product-core/catalog. Server-only (utilise la clé client kernel).
+// Catalogue produit de la caisse : articles en vente de l'organisation, lus sur l'API produit du
+// noyau (/api/product-core/sellable-products). L'ancienne route /api/product-core/catalog a été
+// retirée du noyau le 23/08/2026 : le catalogue de la caisse était vide depuis.
+// Server-only (utilise la clé client kernel).
 // Scopé à l'organisation de la session — le kernel applique en plus son isolation RLS.
 export async function GET() {
     try {
@@ -17,7 +19,7 @@ export async function GET() {
         }
 
         const response = await fetchBackend(
-            `/api/product-core/catalog?organizationId=${encodeURIComponent(String(orgId))}`,
+            `/api/product-core/sellable-products?organizationId=${encodeURIComponent(String(orgId))}&status=ACTIVE`,
             { cache: "no-store" },
             "cashier"
         );
@@ -29,18 +31,18 @@ export async function GET() {
             );
         }
 
-        // A renvoie ApiResponse.success -> { data: [...] } ; readBackendJson snake_case-ise les clés
-        // (unitPrice -> unit_price). On ne garde que les vendables (statut ACTIF).
+        // ApiResponse.success -> { data: [...] } ; readBackendJson snake_case-ise les clés
+        // (productId -> product_id, unitPrice -> unit_price). On ne garde que ce qui est en vente.
         const raw: any[] = Array.isArray(body?.data) ? body.data : Array.isArray(body) ? body : [];
         const products = raw
             .map((p: any) => ({
-                id: String(p?.id ?? ""),
-                name: String(p?.name ?? p?.sku ?? "Produit"),
-                sku: p?.sku ?? null,
-                unitPrice: Number(p?.unit_price ?? p?.unitPrice ?? 0),
+                id: String(p?.product_id ?? p?.id ?? ""),
+                name: String(p?.name ?? p?.global_code ?? "Produit"),
+                sku: p?.global_code ?? p?.sku ?? null,
+                unitPrice: Number(p?.unit_price ?? 0),
                 currency: p?.currency ?? "XAF",
-                photo: p?.photo ?? null,
-                status: String(p?.status ?? "ACTIVE")
+                photo: p?.image_uri ?? p?.photo ?? null,
+                status: String(p?.lifecycle_status ?? p?.status ?? "ACTIVE")
             }))
             .filter((p) => p.id && p.status.toUpperCase() === "ACTIVE");
 

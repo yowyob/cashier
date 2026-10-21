@@ -1,12 +1,17 @@
 import { NextResponse } from "next/server";
 import { fetchBackend, readBackendJson } from "@/lib/backend";
+import { cheminAgences } from "@/lib/kernel-agencies";
 
 export async function GET(request: Request) {
     try {
         const { searchParams } = new URL(request.url);
         const organizationId = searchParams.get("organizationId");
 
-        const backendResponse = await fetchBackend("/agencies", { cache: "no-store" }, "tiers");
+        // Le noyau range les agences sous leur organisation : sans organisation, rien à lister.
+        if (!organizationId) {
+            return NextResponse.json([]);
+        }
+        const backendResponse = await fetchBackend(cheminAgences(organizationId), { cache: "no-store" }, "tiers");
         const body = await readBackendJson(backendResponse);
         if (!backendResponse.ok) {
             return NextResponse.json(

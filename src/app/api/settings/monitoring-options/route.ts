@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
 import { fetchBackend, readBackendJson } from "@/lib/backend";
+import { cheminAgences } from "@/lib/kernel-agencies";
 
 export async function GET() {
     try {
@@ -10,8 +11,12 @@ export async function GET() {
         }
 
         const roleType = session.user.roleType || null;
+        const organizationId = session.user?.organizationId;
         const [agenciesRes, registersRes] = await Promise.all([
-            fetchBackend("/api/agencies", { cache: "no-store" }),
+            // Les agences vivent sous leur organisation dans le noyau (/api/agencies n'existe pas).
+            organizationId
+                ? fetchBackend(cheminAgences(String(organizationId)), { cache: "no-store" }, "tiers")
+                : Promise.resolve(new Response("[]", { status: 200 })),
             fetchBackend("/api/cash-registers", { cache: "no-store" })
         ]);
 
@@ -33,7 +38,7 @@ export async function GET() {
         const agencies = agenciesRaw.map((agency: any) => ({
             id: String(agency.id ?? ""),
             name: agency.name ?? "",
-            town: agency.town ?? "",
+            town: agency.town ?? agency.city ?? "",
             neighborhood: agency.neighborhood ?? null
         }));
 
@@ -44,12 +49,14 @@ export async function GET() {
             ip_address: register.ip_address ?? null,
             mac_address: register.mac_address ?? null,
             adress: register.adress ?? register.address ?? null,
-            agency: register.agency
+            // Le noyau ne joint pas l'agence à la caisse : il ne donne que agency_id. Sans ce repli,
+            // le filtre par agence plus bas ne gardait jamais aucune caisse.
+            agency: register.agency || register.agency_id
                 ? {
-                    id: String(register.agency.id ?? ""),
-                    name: register.agency.name ?? "",
-                    town: register.agency.town ?? "",
-                    neighborhood: register.agency.neighborhood ?? null
+                    id: String(register.agency?.id ?? register.agency_id ?? ""),
+                    name: register.agency?.name ?? agencies.find((a: any) => a.id === String(register.agency_id))?.name ?? "",
+                    town: register.agency?.town ?? agencies.find((a: any) => a.id === String(register.agency_id))?.town ?? "",
+                    neighborhood: register.agency?.neighborhood ?? null
                 }
                 : null
         }));
