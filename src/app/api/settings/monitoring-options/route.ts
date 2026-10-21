@@ -49,12 +49,14 @@ export async function GET() {
             ip_address: register.ip_address ?? null,
             mac_address: register.mac_address ?? null,
             adress: register.adress ?? register.address ?? null,
-            agency: register.agency
+            // Le noyau ne joint pas l'agence à la caisse : il ne donne que agency_id. Sans ce repli,
+            // le filtre par agence plus bas ne gardait jamais aucune caisse.
+            agency: register.agency || register.agency_id
                 ? {
-                    id: String(register.agency.id ?? ""),
-                    name: register.agency.name ?? "",
-                    town: register.agency.town ?? "",
-                    neighborhood: register.agency.neighborhood ?? null
+                    id: String(register.agency?.id ?? register.agency_id ?? ""),
+                    name: register.agency?.name ?? agencies.find((a: any) => a.id === String(register.agency_id))?.name ?? "",
+                    town: register.agency?.town ?? agencies.find((a: any) => a.id === String(register.agency_id))?.town ?? "",
+                    neighborhood: register.agency?.neighborhood ?? null
                 }
                 : null
         }));
