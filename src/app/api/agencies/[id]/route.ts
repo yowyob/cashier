@@ -1,6 +1,15 @@
 import { NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
 import { fetchBackend, readBackendJson } from "@/lib/backend";
+import { cheminAgences, listerAgences, versAgenceNoyau } from "@/lib/kernel-agencies";
+
+/** Le noyau n'a pas de lecture d'une agence seule : on la cherche dans celles de l'organisation. */
+async function trouverAgence(organizationId: string, id: string) {
+    const resultat = await listerAgences(organizationId);
+    if (!resultat.ok) return { ok: false as const, status: resultat.status, error: resultat.error };
+    const agence = resultat.agences.find((item: any) => String(item?.id ?? "") === id);
+    return agence ? { ok: true as const, agence } : { ok: false as const, status: 404, error: "Agency not found." };
+}
 import { getAdminMonitoringScope } from "@/lib/monitoring";
 import { applyMonitoringScope } from "@/lib/monitoring-scope-filter";
 
@@ -49,38 +58,16 @@ export async function GET(
         }
 
         const { id } = await params;
-        const { search } = new URL(request.url);
-        let backendResponse = await fetchBackend(`/api/agencies/${id}${search}`, {
-            cache: "no-store"
-        });
-        let body = await readBackendJson(backendResponse);
-
-        if (!backendResponse.ok && (backendResponse.status === 404 || backendResponse.status === 405)) {
-            const listResponse = await fetchBackend(`/api/agencies${search}`, { cache: "no-store" });
-            const listBody = await readBackendJson(listResponse);
-            if (listResponse.ok) {
-                const list = Array.isArray(listBody)
-                    ? listBody
-                    : Array.isArray(listBody?.data)
-                        ? listBody.data
-                        : [];
-                const found = list.find((item: any) => String(item?.id ?? item?.agency_id ?? "") === id);
-                if (found) {
-                    backendResponse = listResponse;
-                    body = found;
-                }
-            }
+        const organizationId = new URL(request.url).searchParams.get("organization_id")
+            || session.user?.organizationId;
+        if (!organizationId) {
+            return NextResponse.json({ error: "Agency not found." }, { status: 404 });
         }
-
-        if (!backendResponse.ok) {
-            return NextResponse.json(
-                { error: body?.error || "Failed to load agency." },
-                { status: backendResponse.status }
-            );
+        const trouve = await trouverAgence(String(organizationId), id);
+        if (!trouve.ok) {
+            return NextResponse.json({ error: trouve.error }, { status: trouve.status });
         }
-
-        const payload = body?.data ?? body ?? {};
-        const normalized = normalizeAgencyEntry(payload);
+        const normalized = normalizeAgencyEntry(trouve.agence);
         if (session.user.role === "admin") {
             const monitoring = await getAdminMonitoringScope(session);
             const filtered = applyMonitoringScope([normalized], monitoring);
@@ -106,14 +93,21 @@ export async function PUT(
         }
 
         const { id } = await params;
-        const contentType = request.headers.get("content-type") || "application/json";
-        const bodyText = await request.text();
-
-        const backendResponse = await fetchBackend(`/api/agencies/${id}`, {
+        const saisie = await request.json().catch(() => ({}));
+        const organizationId = saisie?.organization_id || session.user?.organizationId;
+        if (!organizationId) {
+            return NextResponse.json({ error: "Agency not found." }, { status: 404 });
+        }
+        // Le noyau exige le code et le nom à chaque modification : on part de l'agence existante.
+        const trouve = await trouverAgence(String(organizationId), id);
+        if (!trouve.ok) {
+            return NextResponse.json({ error: trouve.error }, { status: trouve.status });
+        }
+        const backendResponse = await fetchBackend(`${cheminAgences(String(organizationId))}/${id}`, {
             method: "PATCH",
-            headers: { "Content-Type": contentType },
-            body: bodyText
-        });
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(versAgenceNoyau(saisie, trouve.agence))
+        }, "tiers");
         const body = await readBackendJson(backendResponse);
 
         if (!backendResponse.ok) {
@@ -147,9 +141,14 @@ export async function DELETE(
         }
 
         const { id } = await params;
-        const backendResponse = await fetchBackend(`/api/agencies/${id}`, {
-            method: "DELETE"
-        });
+        const organizationId = session.user?.organizationId;
+        if (!organizationId) {
+            return NextResponse.json({ error: "Agency not found." }, { status: 404 });
+        }
+        // Le noyau ne supprime pas une agence : il la ferme (elle reste tracée).
+        const backendResponse = await fetchBackend(`${cheminAgences(String(organizationId))}/${id}/close`, {
+            method: "POST"
+        }, "tiers");
         const body = await readBackendJson(backendResponse);
 
         if (!backendResponse.ok) {

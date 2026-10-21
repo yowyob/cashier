@@ -26,23 +26,10 @@ export async function middleware(request: NextRequest) {
     }
 
     const sessionCookie = request.cookies.get("session")?.value;
-    // Fire-and-forget audit log for every request (skip nested audit logging)
-    if (pathname !== "/api/audit/log" && request.headers.get("x-skip-audit") !== "1") {
-        const body = {
-            path: pathname,
-            method: request.method,
-            ip: request.ip || request.headers.get("x-forwarded-for") || null,
-        };
-        // Do not await; avoid blocking
-        fetch(new URL("/api/audit/log", origin), {
-            method: "POST",
-            headers: {
-                "content-type": "application/json",
-                "x-skip-audit": "1"
-            },
-            body: JSON.stringify(body)
-        }).catch(() => {});
-    }
+    // L'auto-audit de chaque requête est retiré : il visait /api/audit/log, route qui n'a jamais
+    // existé (ni ici ni dans le noyau), et partait donc en 404 à chaque requête. Le noyau journalise
+    // déjà les actions sensibles ; écrire une entrée d'audit de trésorerie par requête HTTP
+    // demanderait en plus une permission (treasury:manage) que la caisse n'a pas.
 
     // Allow access to login page even if a session cookie exists (enables switching accounts)
     if (pathname === "/login") {

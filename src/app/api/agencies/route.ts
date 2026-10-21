@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
 import { fetchBackend, readBackendJson } from "@/lib/backend";
+import { cheminAgences, listerAgences, versAgenceNoyau } from "@/lib/kernel-agencies";
 import { getAdminMonitoringScope } from "@/lib/monitoring";
 import { applyMonitoringScope } from "@/lib/monitoring-scope-filter";
 
@@ -54,20 +55,17 @@ export async function GET(request: Request) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         }
 
-        const { search } = new URL(request.url);
-        const backendResponse = await fetchBackend(`/api/agencies${search}`, {
-            cache: "no-store"
-        });
-        const body = await readBackendJson(backendResponse);
-
-        if (!backendResponse.ok) {
-            return NextResponse.json(
-                { error: body?.error || "Failed to load agencies." },
-                { status: backendResponse.status }
-            );
+        const organizationId = new URL(request.url).searchParams.get("organization_id")
+            || session.user?.organizationId;
+        if (!organizationId) {
+            return NextResponse.json([]);
+        }
+        const resultat = await listerAgences(String(organizationId));
+        if (!resultat.ok) {
+            return NextResponse.json({ error: resultat.error }, { status: resultat.status });
         }
 
-        const payload = normalizeAgenciesPayload(body);
+        const payload = normalizeAgenciesPayload(resultat.agences);
         if (session.user.role === "admin") {
             const monitoring = await getAdminMonitoringScope(session);
             return NextResponse.json(applyMonitoringScope(payload, monitoring));
@@ -85,18 +83,21 @@ export async function POST(request: Request) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         }
 
-        const contentType = request.headers.get("content-type") || "application/json";
-        const bodyText = await request.text();
-        const backendResponse = await fetchBackend("/api/agencies", {
+        const saisie = await request.json().catch(() => ({}));
+        const organizationId = saisie?.organization_id || session.user?.organizationId;
+        if (!organizationId) {
+            return NextResponse.json({ error: "Organisation inconnue : impossible de créer l'agence." }, { status: 400 });
+        }
+        const backendResponse = await fetchBackend(cheminAgences(String(organizationId)), {
             method: "POST",
-            headers: { "Content-Type": contentType },
-            body: bodyText
-        });
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(versAgenceNoyau(saisie))
+        }, "tiers");
         const body = await readBackendJson(backendResponse);
 
         if (!backendResponse.ok) {
             return NextResponse.json(
-                { error: body?.error || "Failed to create agency." },
+                { error: body?.message || body?.error || "Failed to create agency." },
                 { status: backendResponse.status }
             );
         }

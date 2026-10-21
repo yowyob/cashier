@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
 import { fetchBackend, readBackendJson } from "@/lib/backend";
+import { cheminAgences } from "@/lib/kernel-agencies";
 
 export async function GET() {
     try {
@@ -10,8 +11,12 @@ export async function GET() {
         }
 
         const roleType = session.user.roleType || null;
+        const organizationId = session.user?.organizationId;
         const [agenciesRes, registersRes] = await Promise.all([
-            fetchBackend("/api/agencies", { cache: "no-store" }),
+            // Les agences vivent sous leur organisation dans le noyau (/api/agencies n'existe pas).
+            organizationId
+                ? fetchBackend(cheminAgences(String(organizationId)), { cache: "no-store" }, "tiers")
+                : Promise.resolve(new Response("[]", { status: 200 })),
             fetchBackend("/api/cash-registers", { cache: "no-store" })
         ]);
 
@@ -33,7 +38,7 @@ export async function GET() {
         const agencies = agenciesRaw.map((agency: any) => ({
             id: String(agency.id ?? ""),
             name: agency.name ?? "",
-            town: agency.town ?? "",
+            town: agency.town ?? agency.city ?? "",
             neighborhood: agency.neighborhood ?? null
         }));
 

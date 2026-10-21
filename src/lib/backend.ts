@@ -102,6 +102,11 @@ function rewriteTiersPath(path: string) {
     if (!singleBackend && parsed.pathname.startsWith("/api/") && !parsed.pathname.startsWith("/api/v1/")) {
         return `${parsed.pathname.slice(4)}${parsed.search}`;
     }
+    // Un seul serveur (le noyau) : tout y est sous /api. Les chemins « racine » de l'ancien serveur
+    // gestion-tiers (/organizations, /organizations/my…) partaient sans préfixe et tombaient en 404.
+    if (singleBackend && !parsed.pathname.startsWith("/api/")) {
+        return `/api${parsed.pathname}${parsed.search}`;
+    }
     return `${parsed.pathname}${parsed.search}`;
 }
 
