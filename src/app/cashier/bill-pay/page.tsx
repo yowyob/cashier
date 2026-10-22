@@ -116,7 +116,7 @@ export default function BillPayPage() {
                 <form onSubmit={handlePay} className="space-y-4">
                     <div className="space-y-2">
                         <label className="text-sm font-medium">Invoice Code</label>
-                        <input
+                        <input aria-label="Invoice Code"
                             type="text"
                             required
                             value={invoiceCode}
@@ -128,7 +128,7 @@ export default function BillPayPage() {
 
                     <div className="space-y-2">
                         <label className="text-sm font-medium">Amount (XAF)</label>
-                        <input
+                        <input aria-label="Amount (XAF)"
                             type="number"
                             min="1"
                             required
@@ -141,7 +141,7 @@ export default function BillPayPage() {
 
                     <div className="space-y-2">
                         <label className="text-sm font-medium">Cash Given (XAF)</label>
-                        <input
+                        <input aria-label="Cash Given (XAF)"
                             type="number"
                             min="0"
                             value={cashGiven}
@@ -154,7 +154,7 @@ export default function BillPayPage() {
 
                     <div className="space-y-2">
                         <label className="text-sm font-medium">Payment Method</label>
-                        <select
+                        <select aria-label="Payment Method"
                             value={paymentMethod}
                             onChange={(e) => setPaymentMethod(e.target.value as PaymentMethod)}
                             className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
@@ -169,7 +169,7 @@ export default function BillPayPage() {
 
                     <div className="space-y-2">
                         <label className="text-sm font-medium">Credit</label>
-                        <select
+                        <select aria-label="Credit"
                             value={creditMode}
                             onChange={(e) => setCreditMode(e.target.value as "none" | "with_money" | "without_money")}
                             className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"

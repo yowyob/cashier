@@ -149,7 +149,7 @@ export function AdminsClient({
                         </div>
                     )}
                     <div className="flex flex-col md:flex-row gap-2">
-                        <input
+                        <input aria-label="Search name, username, email"
                             type="text"
                             value={search}
                             onChange={(e) => setSearch(e.target.value)}

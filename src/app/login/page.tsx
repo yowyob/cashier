@@ -209,7 +209,7 @@ function LoginPageInner() {
     }
 
     return (
-        <div className="flex min-h-screen items-center justify-center bg-muted/50">
+        <main id="contenu" tabIndex={-1} className="flex min-h-screen items-center justify-center bg-muted/50 focus:outline-none">
             <div className="w-full max-w-md space-y-6 rounded-lg border bg-background p-6 shadow-lg">
                 <div className="space-y-2 text-center">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -341,7 +341,7 @@ function LoginPageInner() {
                     </div>
                 )}
             </div>
-        </div>
+        </main>
     );
 }
 

@@ -115,14 +115,14 @@ export default function AccountsPage() {
 
             <div className="rounded-xl border bg-card">
                 <div className="p-4 border-b flex flex-col md:flex-row gap-3">
-                    <input
+                    <input aria-label="Search (name, username, account number)"
                         type="text"
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
                         placeholder="Search (name, username, account number)"
                         className="flex-1 rounded-md border border-input bg-background px-3 py-2 text-sm"
                     />
-                    <select
+                    <select aria-label="Filter by role"
                         value={roleFilter}
                         onChange={(e) => setRoleFilter(e.target.value)}
                         className="rounded-md border border-input bg-background px-3 py-2 text-sm"
@@ -132,7 +132,7 @@ export default function AccountsPage() {
                         <option value="cashier">Cashier</option>
                         <option value="admin">Admin</option>
                     </select>
-                    <select
+                    <select aria-label="Filter by status"
                         value={statusFilter}
                         onChange={(e) => setStatusFilter(e.target.value)}
                         className="rounded-md border border-input bg-background px-3 py-2 text-sm"
@@ -236,7 +236,7 @@ export default function AccountsPage() {
                                                                                 <span className="text-xs text-muted-foreground truncate">
                                                                                     {op.reason || op.external_reference || "Mouvement"}
                                                                                 </span>
-                                                                                <span className="text-[10px] uppercase tracking-wide text-muted-foreground">
+                                                                                <span className="text-xs uppercase tracking-wide text-muted-foreground">
                                                                                     {op.session?.cashRegister?.town || "-"}
                                                                                 </span>
                                                                             </div>

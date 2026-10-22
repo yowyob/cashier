@@ -3,6 +3,7 @@
 import { Fragment, useEffect, useState } from "react";
 import { format } from "date-fns";
 import { TablePagination } from "@/components/ui/table-pagination";
+import { activable } from "@/lib/activable";
 
 interface Register {
     id: string;
@@ -530,14 +531,14 @@ export function RegisterList({ registers, hideTownAgency, canManage = false }: R
         <div className="rounded-md border">
             <div className="flex flex-col gap-3 border-b bg-muted/30 p-4">
                 <div className="flex flex-col md:flex-row gap-2">
-                    <input
+                    <input aria-label="Filter by town, agency, IP or MAC"
                         type="text"
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
                         placeholder="Filter by town, agency, IP or MAC"
                         className="flex-1 rounded-md border border-input bg-background px-3 py-2 text-sm"
                     />
-                    <select
+                    <select aria-label="Filter by session"
                         value={sessionFilter}
                         onChange={(e) => setSessionFilter(e.target.value as any)}
                         className="rounded-md border border-input bg-background px-3 py-2 text-sm"
@@ -546,7 +547,7 @@ export function RegisterList({ registers, hideTownAgency, canManage = false }: R
                         <option value="open">Sessions: open</option>
                         <option value="closed">Sessions: closed</option>
                     </select>
-                    <select
+                    <select aria-label="Filter by assignment"
                         value={assignmentFilter}
                         onChange={(e) => setAssignmentFilter(e.target.value as any)}
                         className="rounded-md border border-input bg-background px-3 py-2 text-sm"
@@ -586,7 +587,7 @@ export function RegisterList({ registers, hideTownAgency, canManage = false }: R
                         return (
                             <Fragment key={register.id}>
                                 <tr
-                                    onClick={() => toggleRegister(register.id)}
+                                    {...activable(() => toggleRegister(register.id))}
                                     className={`border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted cursor-pointer ${isExpanded ? "bg-muted/30" : ""}`}
                                 >
                                     {!hideTownAgency && (
@@ -884,7 +885,7 @@ export function RegisterList({ registers, hideTownAgency, canManage = false }: R
                                                                                             <div className="text-sm font-medium">
                                                                                                 Transactions ({filteredMovements.length})
                                                                                             </div>
-                                                                                            <input
+                                                                                            <input aria-label="Filter transactions (amount, reason, cashier, date)"
                                                                                                 type="text"
                                                                                                 value={movementFilter}
                                                                                                 onChange={(event) => {

@@ -6,6 +6,7 @@ import { TicketingInput } from "@/components/cashier/ticketing-input";
 import { format } from "date-fns";
 import jsPDF from "jspdf";
 import { TablePagination } from "@/components/ui/table-pagination";
+import { activable } from "@/lib/activable";
 
 interface Customer {
     id: string;
@@ -615,7 +616,7 @@ export default function WithdrawPage() {
                 <form onSubmit={handleSearch} className="mb-6">
                     <label className="text-sm font-medium mb-2 block">Search Customer</label>
                     <div className="flex gap-2">
-                        <input
+                        <input aria-label="Search Customer"
                             type="text"
                             value={query}
                             onChange={(e) => setQuery(e.target.value)}
@@ -642,10 +643,10 @@ export default function WithdrawPage() {
                                 customer.accounts.map((account) => (
                                     <div
                                         key={account.id}
-                                        onClick={() => {
+                                        {...activable(() => {
                                             setSelectedAccount(account);
                                             setHasDownloadedReceipt(false);
-                                        }}
+                                        })}
                                         className={`cursor-pointer rounded-lg border p-2 transition-colors ${
                                             selectedAccount?.id === account.id
                                                 ? "border-primary bg-primary/5"
@@ -655,10 +656,10 @@ export default function WithdrawPage() {
                                         <div className="flex items-start justify-between gap-2">
                                             <div className="min-w-0">
                                                 <div className="font-medium text-sm truncate">{customer.person.user_first_name}</div>
-                                                <div className="text-[10px] text-muted-foreground truncate">
+                                                <div className="text-xs text-muted-foreground truncate">
                                                     {customer.person.phone || customer.person.user_name}
                                                 </div>
-                                                <div className="mt-2 text-[10px] text-muted-foreground space-y-1">
+                                                <div className="mt-2 text-xs text-muted-foreground space-y-1">
                                                     <div>
                                                         Accounting:{" "}
                                                         <span className="font-medium text-foreground">
@@ -675,7 +676,7 @@ export default function WithdrawPage() {
                                             </div>
                                             <div className="text-right">
                                                 <div className="font-semibold text-sm">{Number(account.total_funds).toLocaleString()} XAF</div>
-                                                <div className={`text-[10px] ${account.is_active ? 'text-green-600' : 'text-red-600'}`}>
+                                                <div className={`text-xs ${account.is_active ? 'text-green-600' : 'text-red-600'}`}>
                                                     {account.is_active ? 'Active' : 'Inactive'}
                                                 </div>
                                             </div>
@@ -698,7 +699,7 @@ export default function WithdrawPage() {
 
                         <div>
                             <label className="text-sm font-medium mb-2 block">Amount (XAF)</label>
-                            <input
+                            <input aria-label="Amount (XAF)"
                                 type="number"
                                 value={amount}
                                 onChange={(e) => {
@@ -716,7 +717,7 @@ export default function WithdrawPage() {
 
                         <div>
                             <label className="text-sm font-medium mb-2 block">Reason (Optional)</label>
-                            <input
+                            <input aria-label="Reason (Optional)"
                                 type="text"
                                 value={reason}
                                 onChange={(e) => {
@@ -825,7 +826,7 @@ export default function WithdrawPage() {
                     <div className="flex flex-col md:flex-row gap-3 p-4">
                         <div className="flex-1">
                             <label className="text-xs font-medium text-muted-foreground">Filter by customer</label>
-                            <input
+                            <input aria-label="Filter by customer"
                                 type="text"
                                 value={customerFilter}
                                 onChange={(e) => setCustomerFilter(e.target.value)}
@@ -835,7 +836,7 @@ export default function WithdrawPage() {
                         </div>
                         <div className="flex-1">
                             <label className="text-xs font-medium text-muted-foreground">Filter by reference</label>
-                            <input
+                            <input aria-label="Filter by reference"
                                 type="text"
                                 value={referenceFilter}
                                 onChange={(e) => setReferenceFilter(e.target.value)}

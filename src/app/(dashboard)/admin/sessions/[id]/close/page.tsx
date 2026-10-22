@@ -107,7 +107,7 @@ export default function CloseSessionPage() {
                             denominations.map((denom) => (
                                 <div key={denom.id} className="flex items-center justify-between gap-2">
                                     <label className="text-sm font-medium w-24">{denom.label}</label>
-                                    <input
+                                    <input aria-label={denom.label}
                                         type="number"
                                         min="0"
                                         className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm"

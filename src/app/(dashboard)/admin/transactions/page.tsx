@@ -142,7 +142,7 @@ export default function TransactionsPage() {
                 <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4">
                     <div className="space-y-2">
                         <label className="text-sm font-medium">Start Date</label>
-                        <input
+                        <input aria-label="Start Date"
                             type="date"
                             value={filters.startDate}
                             onChange={(e) => handleFilterChange('startDate', e.target.value)}
@@ -151,7 +151,7 @@ export default function TransactionsPage() {
                     </div>
                     <div className="space-y-2">
                         <label className="text-sm font-medium">End Date</label>
-                        <input
+                        <input aria-label="End Date"
                             type="date"
                             value={filters.endDate}
                             onChange={(e) => handleFilterChange('endDate', e.target.value)}
@@ -160,7 +160,7 @@ export default function TransactionsPage() {
                     </div>
                     <div className="space-y-2">
                         <label className="text-sm font-medium">Type</label>
-                        <select
+                        <select aria-label="Type"
                             value={filters.type}
                             onChange={(e) => handleFilterChange('type', e.target.value)}
                             className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
@@ -172,7 +172,7 @@ export default function TransactionsPage() {
                     </div>
                     <div className="space-y-2 col-span-2">
                         <label className="text-sm font-medium">Search</label>
-                        <input
+                        <input aria-label="Search"
                             type="text"
                             placeholder="Search by reason..."
                             value={filters.search}

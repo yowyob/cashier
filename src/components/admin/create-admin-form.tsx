@@ -239,7 +239,7 @@ export function CreateAdminForm({
 
                 <div className="space-y-2">
                     <label className="text-sm font-medium">Full name</label>
-                    <input
+                    <input aria-label="Full name"
                         value={foundPerson?.user_first_name || ""}
                         readOnly
                         className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-muted-foreground"
@@ -247,7 +247,7 @@ export function CreateAdminForm({
                 </div>
                 <div className="space-y-2">
                     <label className="text-sm font-medium">Username</label>
-                    <input
+                    <input aria-label="Username"
                         value={foundPerson?.user_name || ""}
                         readOnly
                         className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-muted-foreground"
@@ -255,7 +255,7 @@ export function CreateAdminForm({
                 </div>
                 <div className="space-y-2">
                     <label className="text-sm font-medium">Email</label>
-                    <input
+                    <input aria-label="Email"
                         value={foundPerson?.mail || ""}
                         readOnly
                         className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-muted-foreground"
@@ -263,7 +263,7 @@ export function CreateAdminForm({
                 </div>
                 <div className="space-y-2">
                     <label className="text-sm font-medium">Account number</label>
-                    <input
+                    <input aria-label="Account number"
                         value={foundPerson?.account_number || ""}
                         readOnly
                         className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-muted-foreground"
@@ -271,7 +271,7 @@ export function CreateAdminForm({
                 </div>
                 <div className="space-y-2">
                     <label className="text-sm font-medium">Telegram chat ID</label>
-                    <input
+                    <input aria-label="Telegram chat ID"
                         value={foundPerson?.telegram_chat_id || ""}
                         readOnly
                         className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-muted-foreground"

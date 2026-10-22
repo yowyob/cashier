@@ -82,6 +82,7 @@ export function LandingPage() {
                     </div>
                 </div>
             </header>
+            <main id="contenu" tabIndex={-1} className="focus:outline-none">
 
             <section className="relative overflow-hidden">
                 <div className="mx-auto grid max-w-6xl items-center gap-12 px-5 py-20 md:grid-cols-2 md:py-28">
@@ -223,6 +224,7 @@ export function LandingPage() {
                     </div>
                 </div>
             </section>
+            </main>
 
             <footer className="border-t border-border">
                 <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-3 px-5 py-8 text-sm text-muted-foreground sm:flex-row">

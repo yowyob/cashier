@@ -100,7 +100,7 @@ export default function ProductCart({
 
             {open && (
                 <div className="mt-3 space-y-3">
-                    <input
+                    <input aria-label="Rechercher un produit (nom ou référence)..."
                         type="text"
                         value={query}
                         onChange={(e) => setQuery(e.target.value)}
@@ -145,21 +145,23 @@ export default function ProductCart({
                                         <button
                                             type="button"
                                             onClick={() => setQty(l.product.id, l.qty - 1)}
-                                            className="h-7 w-7 rounded-md border border-input hover:bg-muted"
+                                            aria-label={`Decrease quantity — ${l.product.name}`}
+                                            className="h-9 w-9 rounded-md border border-input hover:bg-muted"
                                         >
                                             −
                                         </button>
-                                        <input
+                                        <input aria-label={`Quantity — ${l.product.name}`}
                                             type="number"
                                             min="0"
                                             value={l.qty}
                                             onChange={(e) => setQty(l.product.id, Math.max(0, Number(e.target.value)))}
-                                            className="h-7 w-12 rounded-md border border-input bg-background px-1 text-center text-sm"
+                                            className="h-9 w-14 rounded-md border border-input bg-background px-1 text-center text-sm"
                                         />
                                         <button
                                             type="button"
                                             onClick={() => setQty(l.product.id, l.qty + 1)}
-                                            className="h-7 w-7 rounded-md border border-input hover:bg-muted"
+                                            aria-label={`Increase quantity — ${l.product.name}`}
+                                            className="h-9 w-9 rounded-md border border-input hover:bg-muted"
                                         >
                                             +
                                         </button>

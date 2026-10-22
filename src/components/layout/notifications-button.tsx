@@ -70,7 +70,7 @@ function NotificationsModal({ onClose }: { onClose: () => void }) {
             <div className="w-full max-w-2xl rounded-lg bg-card p-6 shadow-lg max-h-[85vh] overflow-y-auto space-y-4">
                 <div className="flex items-center justify-between">
                     <h3 className="text-lg font-semibold">Notifications</h3>
-                    <button onClick={onClose} className="text-muted-foreground hover:text-foreground">
+                    <button aria-label="Close" onClick={onClose} className="text-muted-foreground hover:text-foreground">
                         <X className="h-4 w-4" />
                     </button>
                 </div>
@@ -122,7 +122,7 @@ export function NotificationsButton() {
     const { openModal } = useAdminModal();
 
     return (
-        <button
+        <button aria-label="Notifications"
             type="button"
             onClick={() => openModal((close) => <NotificationsModal onClose={close} />)}
             className="relative rounded-full p-2 hover:bg-accent transition-colors"

@@ -182,7 +182,7 @@ export function AssignCashierDialog({ registerId, cashiers, isOpen, onClose }: A
             <div className="w-full max-w-lg rounded-lg bg-background p-6 shadow-lg max-h-[85vh] overflow-y-auto">
                 <div className="flex items-center justify-between mb-4">
                     <h3 className="text-lg font-semibold">Assign Cashier & Initialize Funds</h3>
-                    <button onClick={onClose} className="text-muted-foreground hover:text-foreground">
+                    <button aria-label="Close" onClick={onClose} className="text-muted-foreground hover:text-foreground">
                         <X className="h-4 w-4" />
                     </button>
                 </div>
@@ -216,7 +216,7 @@ export function AssignCashierDialog({ registerId, cashiers, isOpen, onClose }: A
                             {denominations.map(denom => (
                                 <div key={denom.id} className="flex items-center justify-between gap-2">
                                     <label className="text-xs font-medium w-24">{denom.label}</label>
-                                    <input
+                                    <input aria-label={denom.label}
                                         type="number"
                                         min="0"
                                         className="flex h-8 w-full rounded-md border border-input bg-background px-3 py-1 text-sm"

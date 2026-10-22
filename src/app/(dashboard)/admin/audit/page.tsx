@@ -4,6 +4,7 @@ import React, { useEffect, useState } from "react";
 import { format } from "date-fns";
 import Link from "next/link";
 import { TablePagination } from "@/components/ui/table-pagination";
+import { activable } from "@/lib/activable";
 
 interface AuditEvent {
     id: string;
@@ -96,27 +97,27 @@ export default function AuditPage() {
                         <h3 className="font-semibold">Recent events</h3>
                     </div>
                     <div className="flex flex-col md:flex-row gap-2 md:items-center md:flex-wrap">
-                        <input
+                        <input aria-label="Filter by agencyId"
                             type="text"
                             value={agencyFilter}
                             onChange={(e) => setAgencyFilter(e.target.value)}
                             placeholder="Filter by agencyId"
                             className="rounded-md border border-input bg-background px-3 py-2 text-sm"
                         />
-                        <input
+                        <input aria-label="Filter by author"
                             type="text"
                             value={authorFilter}
                             onChange={(e) => setAuthorFilter(e.target.value)}
                             placeholder="Filter by author"
                             className="rounded-md border border-input bg-background px-3 py-2 text-sm"
                         />
-                        <input
+                        <input aria-label="Start date"
                             type="date"
                             value={startDate}
                             onChange={(e) => setStartDate(e.target.value)}
                             className="rounded-md border border-input bg-background px-3 py-2 text-sm"
                         />
-                        <input
+                        <input aria-label="End date"
                             type="date"
                             value={endDate}
                             onChange={(e) => setEndDate(e.target.value)}
@@ -162,7 +163,7 @@ export default function AuditPage() {
                                         <React.Fragment key={ev.id}>
                                             <tr
                                                 className={`border-b cursor-pointer hover:bg-muted/50 ${isExpanded ? "bg-muted/60" : ""}`}
-                                                onClick={() => setExpandedId(isExpanded ? null : ev.id)}
+                                                {...activable(() => setExpandedId(isExpanded ? null : ev.id))}
                                             >
                                                 <td className="p-4 align-middle text-muted-foreground">
                                                     {format(new Date(ev.date_time), "dd/MM/yyyy HH:mm:ss")}

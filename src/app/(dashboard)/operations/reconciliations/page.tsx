@@ -117,7 +117,7 @@ function JustificationModal({
                     <label className="text-sm font-medium mb-2 block">
                         Explain the difference
                     </label>
-                    <textarea
+                    <textarea aria-label="Explain the difference"
                         value={justification}
                         onChange={(e) => setJustification(e.target.value)}
                         rows={4}

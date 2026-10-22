@@ -8,6 +8,7 @@ import { useRouter } from "next/navigation";
 import { AssignCashierDialog } from "@/components/admin/assign-cashier-dialog";
 import { useAdminModal } from "@/components/admin/admin-modal-provider";
 import { TablePagination } from "@/components/ui/table-pagination";
+import { activable } from "@/lib/activable";
 
 interface Cashier {
     id: string;
@@ -774,7 +775,7 @@ export function AssignmentsPageClient({ canAssign, canManageAgencyAssignments = 
                                             <tr
                                                 key={assignment.id}
                                                 className="border-b hover:bg-muted/50 cursor-pointer"
-                                                onClick={() => {
+                                                {...activable(() => {
                                                     const params = new URLSearchParams();
                                                     params.set("cashierId", assignment.cashier.id);
                                                     if (startIso) params.set("start", startIso);
@@ -784,7 +785,7 @@ export function AssignmentsPageClient({ canAssign, canManageAgencyAssignments = 
                                                         params.set("end", new Date().toISOString().split("T")[0]);
                                                     }
                                                     router.push(`/admin/sessions?${params.toString()}`);
-                                                }}
+                                                })}
                                             >
                                                 <td className="p-4 align-middle font-medium">
                                                     {assignment.cashier.user_first_name}{" "}
@@ -809,7 +810,7 @@ export function AssignmentsPageClient({ canAssign, canManageAgencyAssignments = 
                                                                 : "-"}
                                                         </div>
                                                         <span
-                                                            className={`inline-flex w-fit items-center rounded-full px-2 py-0.5 text-[10px] font-semibold ${
+                                                            className={`inline-flex w-fit items-center rounded-full px-2 py-0.5 text-xs font-semibold ${
                                                                 isActive ? "bg-green-100 text-green-800" : "bg-gray-100 text-gray-700"
                                                             }`}
                                                         >
