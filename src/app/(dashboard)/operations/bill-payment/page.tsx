@@ -6,6 +6,7 @@ import { TicketingInput } from "@/components/cashier/ticketing-input";
 import { format } from "date-fns";
 import jsPDF from "jspdf";
 import { useRouter, useSearchParams } from "next/navigation";
+import { activable } from "@/lib/activable";
 
 type PaymentMode = "cash" | "account";
 const PAYMENT_METHODS = ["OM", "MOMO", "CASH", "CHEQUE"] as const;
@@ -482,7 +483,7 @@ export default function BillPaymentPage() {
                         <label className="text-sm font-medium mb-2 block">Invoice/Bill Code</label>
                         <div className="relative">
                             <FileText className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                            <input
+                            <input aria-label="Invoice/Bill Code"
                                 type="text"
                                 value={invoiceCode}
                                 onChange={(e) => setInvoiceCode(e.target.value)}
@@ -520,7 +521,7 @@ export default function BillPaymentPage() {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
                             <label className="text-sm font-medium mb-2 block">Bill Amount (XAF)</label>
-                            <input
+                            <input aria-label="Bill Amount (XAF)"
                                 type="number"
                                 value={billAmount}
                                 onChange={(e) => setBillAmount(e.target.value)}
@@ -534,7 +535,7 @@ export default function BillPaymentPage() {
                         </div>
                         <div>
                             <label className="text-sm font-medium mb-2 block">Cash Given (XAF)</label>
-                            <input
+                            <input aria-label="Cash Given (XAF)"
                                 type="number"
                                 value={cashGiven}
                                 onChange={(e) => setCashGiven(e.target.value)}
@@ -555,7 +556,7 @@ export default function BillPaymentPage() {
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
                                 <label className="text-sm font-medium mb-2 block">Payment Method</label>
-                                <select
+                                <select aria-label="Payment Method"
                                     value={paymentMethod}
                                     onChange={(e) => setPaymentMethod(e.target.value as PaymentMethod)}
                                     disabled={isBillLocked}
@@ -570,7 +571,7 @@ export default function BillPaymentPage() {
                             </div>
                             <div>
                                 <label className="text-sm font-medium mb-2 block">Credit</label>
-                                <select
+                                <select aria-label="Credit"
                                     value={creditMode}
                                     onChange={(e) => setCreditMode(e.target.value as "none" | "with_money" | "without_money")}
                                     disabled={isBillLocked}
@@ -611,7 +612,7 @@ export default function BillPaymentPage() {
                             <div className="space-y-2">
                                 <label className="text-sm font-medium">Search Customer</label>
                                 <div className="flex gap-2">
-                                    <input
+                                    <input aria-label="Search Customer"
                                         type="text"
                                         value={query}
                                         onChange={(e) => setQuery(e.target.value)}
@@ -637,12 +638,11 @@ export default function BillPaymentPage() {
                                         customer.accounts.map((account) => (
                                             <div
                                                 key={account.id}
-                                                onClick={() =>
+                                                {...activable(() =>
                                                     setSelectedAccount({
                                                         ...account,
                                                         customer: { person: customer.person }
-                                                    })
-                                                }
+                                                    }))}
                                                 className={`cursor-pointer rounded-lg border p-3 transition-colors ${
                                                     selectedAccount?.id === account.id
                                                         ? "border-primary bg-primary/5"

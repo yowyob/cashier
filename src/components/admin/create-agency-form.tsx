@@ -167,7 +167,7 @@ export function CreateAgencyForm({
                 {isOrgAdmin && (
                     <div className="space-y-2 col-span-2">
                         <label className="text-sm font-medium">Organization</label>
-                        <input
+                        <input aria-label="Organization"
                             value={sessionOrganizationName || "Unknown organization"}
                             readOnly
                             className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-muted-foreground"

@@ -103,14 +103,14 @@ export default function WithdrawPage() {
 
                 {/* Search Section */}
                 <form onSubmit={handleSearch} className="flex gap-2 mb-6">
-                    <input
+                    <input aria-label="Search customer by name or phone..."
                         type="text"
                         value={query}
                         onChange={(e) => setQuery(e.target.value)}
                         placeholder="Search customer by name or phone..."
                         className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                     />
-                    <button
+                    <button aria-label="Search customer"
                         type="submit"
                         disabled={searchLoading}
                         className="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-secondary text-secondary-foreground hover:bg-secondary/80 h-10 px-4 py-2"

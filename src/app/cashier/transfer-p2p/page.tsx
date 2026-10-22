@@ -105,14 +105,14 @@ export default function P2PTransferPage() {
                         {!sourceAccount ? (
                             <>
                                 <div className="flex gap-2">
-                                    <input
+                                    <input aria-label="Search sender..."
                                         type="text"
                                         value={sourceQuery}
                                         onChange={(e) => setSourceQuery(e.target.value)}
                                         placeholder="Search sender..."
                                         className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm"
                                     />
-                                    <button
+                                    <button aria-label="Search source customer"
                                         onClick={() => searchCustomer(sourceQuery, setSourceCustomers)}
                                         className="bg-secondary text-secondary-foreground px-3 rounded-md"
                                     >
@@ -132,10 +132,10 @@ export default function P2PTransferPage() {
                                                 className="text-left text-xs p-2 border rounded hover:bg-muted/80 disabled:opacity-50 disabled:cursor-not-allowed"
                                             >
                                                 <div className="font-medium truncate">{c.person.user_first_name}</div>
-                                                <div className="text-[10px] text-muted-foreground truncate">
+                                                <div className="text-xs text-muted-foreground truncate">
                                                     {c.person.phone || c.person.user_name}
                                                 </div>
-                                                <div className="mt-2 text-[10px] text-muted-foreground">
+                                                <div className="mt-2 text-xs text-muted-foreground">
                                                     <div>
                                                         Accounting:{" "}
                                                         <span className="font-medium text-foreground">
@@ -175,14 +175,14 @@ export default function P2PTransferPage() {
                         {!destAccount ? (
                             <>
                                 <div className="flex gap-2">
-                                    <input
+                                    <input aria-label="Search receiver..."
                                         type="text"
                                         value={destQuery}
                                         onChange={(e) => setDestQuery(e.target.value)}
                                         placeholder="Search receiver..."
                                         className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm"
                                     />
-                                    <button
+                                    <button aria-label="Search destination customer"
                                         onClick={() => searchCustomer(destQuery, setDestCustomers)}
                                         className="bg-secondary text-secondary-foreground px-3 rounded-md"
                                     >
@@ -202,10 +202,10 @@ export default function P2PTransferPage() {
                                                 className="text-left text-xs p-2 border rounded hover:bg-muted/80 disabled:opacity-50 disabled:cursor-not-allowed"
                                             >
                                                 <div className="font-medium truncate">{c.person.user_first_name}</div>
-                                                <div className="text-[10px] text-muted-foreground truncate">
+                                                <div className="text-xs text-muted-foreground truncate">
                                                     {c.person.phone || c.person.user_name}
                                                 </div>
-                                                <div className="mt-2 text-[10px] text-muted-foreground">
+                                                <div className="mt-2 text-xs text-muted-foreground">
                                                     <div>
                                                         Accounting:{" "}
                                                         <span className="font-medium text-foreground">
@@ -252,7 +252,7 @@ export default function P2PTransferPage() {
 
                             <div className="space-y-2">
                                 <label className="text-sm font-medium">Amount to Transfer (XAF)</label>
-                                <input
+                                <input aria-label="Amount to Transfer (XAF)"
                                     type="number"
                                     min="1"
                                     max={sourceAccount.total_funds}

@@ -64,7 +64,7 @@ export default function InventoryPage() {
                 </button>
             </header>
             {error && <p className="rounded-lg bg-destructive/10 p-3 text-sm text-destructive">{error}</p>}
-            <input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Rechercher un produit…"
+            <input aria-label="Rechercher un produit…" value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Rechercher un produit…"
                 className="h-10 w-full max-w-sm rounded-lg border bg-background px-3 text-sm" />
             <div className="overflow-x-auto rounded-xl border bg-card">
                 <table className="w-full text-sm">
@@ -92,7 +92,7 @@ export default function InventoryPage() {
                                     {!product.priceTiers.length && <span>{number(product.unitPrice)} {product.currency}</span>}
                                 </div></td>
                                 <td className="px-4 py-4"><div className="flex min-w-72 items-center gap-2">
-                                    <input type="number" min="1" step="any" value={quantities[product.productId] ?? "1"}
+                                    <input aria-label={`Quantité — ${product.name}`} type="number" min="1" step="any" value={quantities[product.productId] ?? "1"}
                                         onChange={(event) => setQuantities((current) => ({ ...current, [product.productId]: event.target.value }))}
                                         className="h-9 w-20 rounded-md border bg-background px-2" />
                                     <button onClick={() => void quote(product)} className="h-9 rounded-md bg-primary px-3 text-xs font-medium text-primary-foreground">Calculer</button>

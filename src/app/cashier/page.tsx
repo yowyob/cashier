@@ -87,7 +87,7 @@ export default async function CashierDashboardPage() {
                     </form>
                 </div>
             </header>
-            <main className="flex flex-1 flex-col gap-4 p-4 md:gap-8 md:p-8">
+            <main id="contenu" tabIndex={-1} className="focus:outline-none flex flex-1 flex-col gap-4 p-4 md:gap-8 md:p-8">
                 <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
                     <div className="rounded-xl border bg-card text-card-foreground shadow">
                         <div className="p-6 flex flex-row items-center justify-between space-y-0 pb-2">

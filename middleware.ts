@@ -20,7 +20,8 @@ export async function middleware(request: NextRequest) {
         pathname.startsWith("/api/auth") ||
         pathname.startsWith("/api/public") ||
         pathname.startsWith("/api/notify-unauthorized") ||
-        pathname === "/welcome"
+        pathname === "/welcome" ||
+        pathname === "/robots.txt"
     ) {
         return NextResponse.next();
     }

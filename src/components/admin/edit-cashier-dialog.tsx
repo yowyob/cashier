@@ -172,7 +172,7 @@ export function EditCashierDialog({ cashier, isOpen, onClose }: EditCashierDialo
             <div className="w-full max-w-lg rounded-lg bg-background p-6 shadow-lg max-h-[85vh] overflow-y-auto">
                 <div className="flex items-center justify-between mb-4">
                     <h3 className="text-lg font-semibold">Edit Cashier</h3>
-                    <button onClick={onClose} className="text-muted-foreground hover:text-foreground">
+                    <button aria-label="Close" onClick={onClose} className="text-muted-foreground hover:text-foreground">
                         <X className="h-4 w-4" />
                     </button>
                 </div>

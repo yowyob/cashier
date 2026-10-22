@@ -49,7 +49,7 @@ export default async function DashboardLayout({
             <div className={`flex flex-1 flex-col overflow-hidden${showSidebar ? "" : " w-full"}`}>
                 <AdminModalProvider>
                     <Header title={headerTitle} showLogout={showLogout} showSettings={showSettings} />
-                    <main className="flex-1 overflow-y-auto p-6">
+                    <main id="contenu" tabIndex={-1} className="flex-1 overflow-y-auto p-6 focus:outline-none">
                         {children}
                     </main>
                 </AdminModalProvider>

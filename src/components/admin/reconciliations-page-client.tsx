@@ -177,7 +177,7 @@ function ReconciliationReviewModal({
 
                 <div className="mb-4">
                     <label className="text-sm font-medium mb-2 block">Admin Comment</label>
-                    <textarea
+                    <textarea aria-label="Admin Comment"
                         value={adminComment}
                         onChange={(e) => setAdminComment(e.target.value)}
                         rows={3}

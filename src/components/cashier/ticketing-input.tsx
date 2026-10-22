@@ -88,7 +88,7 @@ export function TicketingInput({ onTotalChange, initialTotal = 0 }: TicketingInp
                     {denominations.map(denom => (
                         <div key={denom.id} className="flex items-center justify-between gap-2">
                             <label className="text-xs font-medium w-20">{denom.label}</label>
-                            <input
+                            <input aria-label={denom.label}
                                 type="number"
                                 min="0"
                                 className="flex h-8 w-full rounded-md border border-input bg-background px-2 py-1 text-xs"

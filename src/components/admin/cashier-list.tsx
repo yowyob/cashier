@@ -4,6 +4,7 @@ import { useState, Fragment, useEffect } from "react";
 import { EditCashierDialog } from "./edit-cashier-dialog";
 import { useAdminModal } from "@/components/admin/admin-modal-provider";
 import { TablePagination } from "@/components/ui/table-pagination";
+import { activable } from "@/lib/activable";
 
 interface Cashier {
     id: string;
@@ -99,14 +100,14 @@ export function CashierList({ cashiers, canManage }: CashierListProps) {
         <div className="rounded-md border">
             {error && <div className="p-3 text-sm text-destructive bg-destructive/10 border-b">{error}</div>}
             <div className="flex flex-col md:flex-row gap-2 border-b bg-muted/30 p-4">
-                <input
+                <input aria-label="Search by name, username, or phone"
                     type="text"
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
                     placeholder="Search by name, username, or phone"
                     className="flex-1 rounded-md border border-input bg-background px-3 py-2 text-sm"
                 />
-                <input
+                <input aria-label="Filter by authorized town"
                     type="text"
                     value={townFilter}
                     onChange={(e) => setTownFilter(e.target.value)}
@@ -131,7 +132,7 @@ export function CashierList({ cashiers, canManage }: CashierListProps) {
                             <Fragment key={cashier.id}>
                                 <tr
                                     className="border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted cursor-pointer"
-                                    onClick={() => toggleExpand(cashier.id)}
+                                    {...activable(() => toggleExpand(cashier.id))}
                                     title="Click to view more details"
                                 >
                                     <td className="p-4 align-middle">{cashier.user_first_name}</td>

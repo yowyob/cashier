@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import { TablePagination } from "@/components/ui/table-pagination";
+import { activable } from "@/lib/activable";
 
 interface Customer {
     id: string;
@@ -179,7 +180,7 @@ export default function CustomersPage() {
                                     <tr
                                         key={customer.id}
                                         className="border-b hover:bg-muted/50 cursor-pointer"
-                                        onClick={() => router.push(`/admin/accounts?customerId=${customer.person.id}`)}
+                                        {...activable(() => router.push(`/admin/accounts?customerId=${customer.person.id}`))}
                                     >
                                         <td className="p-4 align-middle font-medium">
                                             {customer.person.user_first_name}

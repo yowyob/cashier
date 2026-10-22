@@ -193,21 +193,21 @@ export function AgencyList({
                 <div className="p-3 text-sm text-destructive bg-destructive/10 border-b">{error}</div>
             )}
             <div className="flex flex-col gap-2 md:flex-row md:items-center border-b bg-muted/30 p-4">
-                <input
+                <input aria-label="Search by name or location"
                     type="text"
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
                     placeholder="Search by name or location"
                     className="flex-1 rounded-md border border-input bg-background px-3 py-2 text-sm"
                 />
-                <input
+                <input aria-label="Country"
                     type="text"
                     value={countryFilter}
                     onChange={(e) => setCountryFilter(e.target.value)}
                     placeholder="Country"
                     className="rounded-md border border-input bg-background px-3 py-2 text-sm"
                 />
-                <input
+                <input aria-label="Town / neighborhood"
                     type="text"
                     value={townFilter}
                     onChange={(e) => setTownFilter(e.target.value)}
@@ -269,7 +269,7 @@ export function AgencyList({
                                             </button>
                                         </div>
                                         {blocked && (
-                                            <p className="text-[10px] text-muted-foreground mt-1">Locked: open/blocked session exists</p>
+                                            <p className="text-xs text-muted-foreground mt-1">Locked: open/blocked session exists</p>
                                         )}
                                     </td>
                                 )}

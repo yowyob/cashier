@@ -8,7 +8,7 @@ export function SettingsButton() {
     const { openModal } = useAdminModal();
 
     return (
-        <button
+        <button aria-label="Settings"
             type="button"
             onClick={() =>
                 openModal((close) => (

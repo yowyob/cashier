@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import { ArrowDownToLine } from "lucide-react";
 import { format } from "date-fns";
 import { TablePagination } from "@/components/ui/table-pagination";
+import { activable } from "@/lib/activable";
 
 interface Movement {
     id: string;
@@ -214,7 +215,7 @@ export default function FundRequestPage() {
                 <form onSubmit={handleRequest} className="space-y-4">
                     <div>
                         <label className="text-sm font-medium mb-2 block">Requested Amount (XAF)</label>
-                        <input
+                        <input aria-label="Requested Amount (XAF)"
                             type="number"
                             value={amount}
                             onChange={(e) => setAmount(e.target.value)}
@@ -227,7 +228,7 @@ export default function FundRequestPage() {
                     </div>
                     <div>
                         <label className="text-sm font-medium mb-2 block">Reason</label>
-                        <input
+                        <input aria-label="Reason"
                             type="text"
                             value={reason}
                             onChange={(e) => setReason(e.target.value)}
@@ -261,7 +262,7 @@ export default function FundRequestPage() {
                     <div className="flex flex-col md:flex-row gap-3 p-4">
                         <div className="flex-1">
                             <label className="text-xs font-medium text-muted-foreground">Filter by source MAC</label>
-                            <input
+                            <input aria-label="Filter by source MAC"
                                 type="text"
                                 value={sourceMacFilter}
                                 onChange={(e) => setSourceMacFilter(e.target.value)}
@@ -271,7 +272,7 @@ export default function FundRequestPage() {
                         </div>
                         <div className="flex-1">
                             <label className="text-xs font-medium text-muted-foreground">Filter by destination MAC</label>
-                            <input
+                            <input aria-label="Filter by destination MAC"
                                 type="text"
                                 value={destMacFilter}
                                 onChange={(e) => setDestMacFilter(e.target.value)}
@@ -312,7 +313,7 @@ export default function FundRequestPage() {
                                         <React.Fragment key={request.id}>
                                             <tr
                                                 className={`border-b hover:bg-muted/50 cursor-pointer ${isExpanded ? "bg-muted/60" : ""}`}
-                                                onClick={() => setExpandedId(isExpanded ? null : request.id)}
+                                                {...activable(() => setExpandedId(isExpanded ? null : request.id))}
                                             >
                                                 <td className="p-4 align-middle">
                                                     {format(new Date(request.create_on), "dd/MM/yyyy HH:mm:ss")}
