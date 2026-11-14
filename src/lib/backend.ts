@@ -72,7 +72,12 @@ const CASHIER_PREFIXES = [
     "/api/v1/accounting",
     "/api/users/profile",
     // Catalogue produit servi par le modèle KSM riche A (product_core) du kernel.
-    "/api/product-core"
+    "/api/product-core",
+    // Portefeuilles et caisse commune du noyau (encaissement mobile money d'un client sans
+    // compte). Ces chemins vivent sous /api sur le kernel : laissés sur la cible « tiers », ils
+    // perdraient leur préfixe dès que les deux URLs diffèrent — en développement local à deux
+    // serveurs, l'encaissement tomberait alors en 404 sans que rien n'explique pourquoi.
+    "/api/payments"
 ];
 
 const TIERS_EXACT_PATH_REWRITES: Record<string, string> = {

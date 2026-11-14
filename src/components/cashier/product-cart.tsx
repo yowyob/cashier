@@ -14,6 +14,20 @@ type CatalogProduct = {
 type CartLine = { product: CatalogProduct; qty: number };
 
 /**
+ * Le panier, ligne par ligne, tel qu'un encaissement en a besoin.
+ *
+ * Le total seul ne suffit pas : pour faire payer le client par mobile money, le noyau exige les
+ * ARTICLES et leurs prix unitaires — c'est lui qui recalcule le montant, et c'est ce détail que le
+ * client voit sur la page du prestataire. Un panier résumé en « 3x Café » ne se facture pas.
+ */
+export type LigneEncaissement = {
+    label: string;
+    description: string | null;
+    quantity: number;
+    unitAmount: number;
+};
+
+/**
  * Panier produits de la caisse : charge le catalogue depuis le modèle KSM A (via /api/catalog),
  * laisse le caissier choisir des articles (noms + prix issus du catalogue), calcule le total,
  * puis le pousse dans le montant + le motif itemisé de l'opération d'encaissement.
@@ -23,7 +37,10 @@ export default function ProductCart({
     defaultOpen = false,
     applyLabel = "Appliquer au montant"
 }: {
-    onApply: (total: number, summary: string) => void;
+    // Le troisième argument est le DÉTAIL du panier. Les appelants qui n'encaissent pas (un dépôt
+    // sur compte client) continuent de ne déclarer que deux paramètres : une fonction plus courte
+    // reste assignable, et rien ne les oblige à connaître les lignes.
+    onApply: (total: number, summary: string, lignes: LigneEncaissement[]) => void;
     defaultOpen?: boolean;
     applyLabel?: string;
 }) {
@@ -82,7 +99,13 @@ export default function ProductCart({
     }
     function apply() {
         const summary = lines.map((l) => `${l.qty}x ${l.product.name}`).join(", ");
-        onApply(total, summary ? `Vente: ${summary}` : "");
+        const lignes: LigneEncaissement[] = lines.map((l) => ({
+            label: l.product.name,
+            description: l.product.sku,
+            quantity: l.qty,
+            unitAmount: l.product.unitPrice
+        }));
+        onApply(total, summary ? `Vente: ${summary}` : "", lignes);
     }
 
     const fmt = (n: number) => n.toLocaleString();
